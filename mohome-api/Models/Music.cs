@@ -11,6 +11,6 @@ namespace Models
         public string Author { get; set; }
         public string MusicUrl { get; set; }
 
-        public int UserId { get; set; }
+        public virtual Profile Profile { get; set; }
     }
 }
