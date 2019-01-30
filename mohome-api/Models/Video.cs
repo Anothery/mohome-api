@@ -11,6 +11,6 @@ namespace Models
         public string ThumbnailUrl { get; set; }
         public string Name { get; set; }
         public string Description { get; set;  }
-        public int UserId { get; set; }
+        public virtual Profile Profile { get; set; }
     }
 }
