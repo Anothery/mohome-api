@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DBRepository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,7 +21,7 @@ namespace mohome_api.Controllers
             this.db = rep;
         }
 
-        [HttpGet]
+        [HttpGet, Authorize]
         public string Get()
         {
             return Newtonsoft.Json.JsonConvert.SerializeObject(db.GetProfiles());
