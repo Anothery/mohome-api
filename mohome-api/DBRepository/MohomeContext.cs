@@ -10,7 +10,9 @@ namespace DBRepository
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseMySQL("server=localhost;database=db;user=root;password=password");
+            optionsBuilder.UseMySQL("server=localhost;database=db;user=user;password=password");
+           
+
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
