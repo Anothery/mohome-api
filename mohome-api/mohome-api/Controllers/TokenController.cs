@@ -4,6 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DBRepository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,10 +17,12 @@ namespace mohome_api.Controllers
     [ApiController]
     public class TokenController : ControllerBase
     {
+        IRepository db;
         private IConfiguration _config;
 
-        public TokenController(IConfiguration config)
+        public TokenController(IConfiguration config, IRepository rep)
         {
+            this.db = rep;
             _config = config;
         }
 
@@ -55,23 +58,23 @@ namespace mohome_api.Controllers
         private UserModel Authenticate(LoginModel login)
         {
             UserModel user = null;
+            var profile = db.GetProfile(login.Email);
 
-            if (login.Username == "sudzu" && login.Password == "sudzu")
-            {
-                user = new UserModel { Name = "Sudzusama", Role = "sudzusama@gmail.com" };
-            }
+            if (profile is null) return null;
+            user = new UserModel { Name = profile.Name,  Email = login.Email, Role = profile.Role.Name };
             return user;
         }
 
         public class LoginModel
         {
-            public string Username { get; set; }
+            public string Email { get; set; }
             public string Password { get; set; }
         }
 
         private class UserModel
         {
             public string Name { get; set; }
+            public string Email { get; set; }
             public string Role { get; set; }
         }
 

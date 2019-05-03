@@ -15,7 +15,6 @@ namespace mohome_api
         public static void Main(string[] args)
         {
             CreateWebHostBuilder(args)
-                .UseUrls("http://localhost:6969/")
                 .Build().Run();
         }
 

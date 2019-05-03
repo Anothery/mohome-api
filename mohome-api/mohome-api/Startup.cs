@@ -30,6 +30,17 @@ namespace mohome_api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("CorsPolicy",
+                    builder => builder.AllowAnyOrigin()
+                      .AllowAnyMethod()
+                      .AllowAnyHeader()
+                      .AllowCredentials()
+                .Build());
+            });
+
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                .AddJwtBearer(options =>
                {
@@ -46,7 +57,7 @@ namespace mohome_api
                });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-
+            services.AddMvc().AddControllersAsServices();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info { Title = "Mohome API", Version = "v1" });
@@ -54,11 +65,15 @@ namespace mohome_api
 
             services.AddTransient<IRepository, MohomeRepository>();
             services.AddTransient<MohomeContext>();
+
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            app.UseCors("CorsPolicy");
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
