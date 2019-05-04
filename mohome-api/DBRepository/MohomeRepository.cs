@@ -7,6 +7,7 @@ using Models;
 
 namespace DBRepository
 {
+    // TODO: Divide repositories by section
     public class MohomeRepository : IRepository
     {
         private MohomeContext db;
@@ -28,6 +29,7 @@ namespace DBRepository
             }
         }
 
+
         public Profile GetProfile(string email)
         {
             try
@@ -38,7 +40,20 @@ namespace DBRepository
             {
                 throw ex;
             }
-}
+        }
+
+        public Profile GetProfile(string email, string password)
+        {
+            try
+            {
+                return db.Profile.Include(r => r.Role).Where(r => r.Email == email && r.Password == password).FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
 
         public bool CheckProfileExists(string email)
         {
@@ -69,6 +84,57 @@ namespace DBRepository
 
             if (result > 0) return true;
             return false;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public int CreateAlbum(string name, string description, int userId)
+        {
+            try
+            {
+                var newAlbum = new PhotoAlbum
+                {
+                    Name = name,
+                    Description = description,
+                    UserId = userId
+                };
+                db.PhotoAlbum.Add(newAlbum);
+                db.SaveChanges();
+                return newAlbum.AlbumId;
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+        }
+
+        public bool DeleteAlbum(int albumId)
+        {
+            try
+            {
+                var album = db.PhotoAlbum.Where(a => a.AlbumId == albumId).FirstOrDefault();
+                db.PhotoAlbum.Remove(album);
+                var result = db.SaveChanges();
+                return result > 0;
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+        }
+
+        public IEnumerable<PhotoAlbum> GetPhotoAlbums(int userId)
+        {
+            try
+            {
+                return db.PhotoAlbum.Where(pa => pa.UserId == userId);
             }
             catch (Exception ex)
             {

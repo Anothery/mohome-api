@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2026
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Models", "Models\Models.csproj", "{BD7D27C9-44E1-4908-A6EA-7C9D0BF21865}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Models", "Models\Models.csproj", "{BD7D27C9-44E1-4908-A6EA-7C9D0BF21865}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBRepository", "DBRepository\DBRepository.csproj", "{5E22E8A7-DD9B-4920-B676-98CCE29DB28C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBRepository", "DBRepository\DBRepository.csproj", "{5E22E8A7-DD9B-4920-B676-98CCE29DB28C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mohome-api", "mohome-api\mohome-api.csproj", "{F75CA544-8497-49EB-BE6E-94803B7A5C31}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mohome-api", "mohome-api\mohome-api.csproj", "{F75CA544-8497-49EB-BE6E-94803B7A5C31}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

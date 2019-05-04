@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>mohome-api</name>
+    </assembly>
+    <members>
+        <member name="M:mohome_api.Controllers.PhotoController.GeneratePhotoName">
+            <summary>
+            [TEST] Generates unique name for photo
+            </summary>
+        </member>
+        <member name="M:mohome_api.Controllers.PhotoController.GetAlbums">
+            <summary>
+            Returns album list for current user
+            </summary>
+        </member>
+        <member name="M:mohome_api.Controllers.PhotoController.CreateAlbum(mohome_api.ViewModels.CreateAlbumModel)">
+            <summary>
+            Creates a new album
+            </summary>
+             <response code="401">Your user id is undefined</response>  
+             <response code="400">Your input data is incorrect</response>  
+             <response code="520">Unknown error</response>  
+        </member>
+        <member name="M:mohome_api.Controllers.PhotoController.DeleteAlbum(mohome_api.ViewModels.DeleteAlbumModel)">
+            <summary>
+            Deletes a specific album
+            </summary>
+             <response code="500">Failed to delete album. Try again</response>  
+             <response code="400">Your input data is incorrect</response>  
+             <response code="520">Unknown error</response>  
+        </member>
+        <member name="M:mohome_api.Controllers.TokenController.CreateToken(mohome_api.ViewModels.LoginModel)">
+            <summary>
+            Creates bearer token
+            </summary>
+            
+        </member>
+        <member name="M:mohome_api.Controllers.UsersController.Get">
+            <summary>
+            [TEST] returns profile list
+            </summary>
+        </member>
+        <member name="M:mohome_api.Controllers.UsersController.SignUp(mohome_api.ViewModels.RegisterModel)">
+            <summary>
+            Registers a new user
+            </summary>
+            <response code="400">Your input data is incorrect</response>  
+            <response code="520">Unknown error</response>  
+        </member>
+    </members>
+</doc>

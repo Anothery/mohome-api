@@ -6,10 +6,12 @@ using DBRepository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using mohome_api.ViewModels;
 using static mohome_api.Controllers.TokenController;
 
 namespace mohome_api.Controllers
 {
+    // TODO: trycatch and describing errors
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
@@ -22,37 +24,52 @@ namespace mohome_api.Controllers
             this.db = rep;
         }
 
+        /// <summary>
+        /// [TEST] returns profile list
+        /// </summary>
         [HttpGet, Authorize]
-        public string Get()
+        public IActionResult Get()
         {
-            return Newtonsoft.Json.JsonConvert.SerializeObject(db.GetProfiles());
+            return Ok(new { response = Newtonsoft.Json.JsonConvert.SerializeObject(db.GetProfiles()) });
         }
 
+        /// <summary>
+        /// Registers a new user
+        /// </summary>
+        /// <response code="400">Your input data is incorrect</response>  
+        /// <response code="520">Unknown error</response>  
         [AllowAnonymous]
         [Route("sign-up")]
         [HttpPost]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(520)]
         public IActionResult SignUp([FromBody] RegisterModel model)
         {
-            IActionResult response;
-            if (!db.CheckProfileExists(model.Email))
+            try
             {
-                response = Conflict();
-                return response;
-            }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest("Your input data is incorrect");
+                };
 
-            if (db.AddNewUser(model.Email, model.Password, model.Username))
+                IActionResult response;
+                if (!db.CheckProfileExists(model.Email))
+                {
+                    response = Conflict(new { error = "Profile already exists" });
+                    return response;
+                }
+
+                if (db.AddNewUser(model.Email, model.Password, model.Username))
+                {
+                    var controller = (TokenController)HttpContext.RequestServices.GetService(typeof(TokenController));
+                    return controller.CreateToken(new LoginModel { Email = model.Email, Password = model.Password });
+                }
+                return StatusCode(520, new { error = "Unknown error" });
+            }
+            catch(Exception ex)
             {
-                var controller = (TokenController) HttpContext.RequestServices.GetService(typeof(TokenController));
-                return controller.CreateToken(new LoginModel { Email = model.Email, Password = model.Password });
-            }
-            return StatusCode(500);
-        }
-
-        public class RegisterModel
-        {
-            public string Username { get; set; }
-            public string Password { get; set; }
-            public string Email { get; set; }
+                return StatusCode(520, new { error = "Unknown error" });
+            }      
         }
 
     }
