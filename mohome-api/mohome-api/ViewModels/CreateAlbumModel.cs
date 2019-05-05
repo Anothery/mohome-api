@@ -11,6 +11,6 @@ namespace mohome_api.ViewModels
         [Required]
         public string AlbumName { get; set; }
         [StringLength(100)]
-        public string Descrption { get; set; }
+        public string Description { get; set; }
     }
 }

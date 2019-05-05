@@ -8,7 +8,6 @@ namespace mohome_api.ViewModels
         [StringLength(20, MinimumLength = 3)]
         public string Username { get; set; }
         [Required]
-        [StringLength(20, MinimumLength = 6)]
         public string Password { get; set; }
         [Required]
         [EmailAddress]

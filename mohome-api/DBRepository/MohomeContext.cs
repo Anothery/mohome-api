@@ -10,13 +10,14 @@ namespace DBRepository
         public DbSet<Role> Role { get; set; }
         public DbSet<PhotoAlbum> PhotoAlbum { get; set; }
         public DbSet<Photo> Photo { get; set; }
+        public DbSet<RefreshToken> RefreshToken { get; set; }
 
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             // UNCOMMENT AND FILL (!)
             //optionsBuilder.UseMySQL("server=localhost;database=db;user=user;password=password");
-          
+            optionsBuilder.UseMySQL("server=localhost;database=mohome;user=root;password=alexzm123");
 
         }
 
@@ -30,7 +31,7 @@ namespace DBRepository
                 entity.HasKey(e => e.UserId);
                 entity.Property(e => e.Password).IsRequired();
                 entity.Property(e => e.Name).IsRequired();
-                entity.Property(e => e.Email).IsRequired();   
+                entity.Property(e => e.Email).IsRequired();
                 entity.Property(e => e.RoleId).HasDefaultValue(1);
             });
 
@@ -52,7 +53,7 @@ namespace DBRepository
                 entity.Property(e => e.Path).IsRequired();
             });
             modelBuilder.Entity<PhotoAlbum>(entity =>
-            {    
+            {
                 entity.HasKey(e => e.AlbumId);
                 entity.Property(e => e.UserId).IsRequired();
                 entity.Property(e => e.Created).HasDefaultValue(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -66,6 +67,22 @@ namespace DBRepository
                       .HasForeignKey(e => e.AlbumId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
+            modelBuilder.Entity<RefreshToken>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.UserId).IsRequired();
+                entity.Property(e => e.Token).IsRequired();
+                entity.Property(e => e.CreationDate).IsRequired();
+                entity.Property(e => e.ExpirationDate).IsRequired();
+
+                entity.HasOne(e => e.User)
+                      .WithMany(e => e.Tokens)
+                      .HasForeignKey(e => e.UserId);
+
+                entity.Property(e => e.CreationDate).HasDefaultValue(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+            });
         }
+
     }
 }

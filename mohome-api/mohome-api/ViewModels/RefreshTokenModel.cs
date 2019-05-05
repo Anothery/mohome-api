@@ -6,12 +6,9 @@ using System.Threading.Tasks;
 
 namespace mohome_api.ViewModels
 {
-    public class LoginModel
+    public class RefreshTokenModel
     {
         [Required]
-        [EmailAddress]
-        public string Email { get; set; }
-        [Required]
-        public string PasswordHash { get; set; }
+        public string RefreshToken { get; set; }
     }
 }

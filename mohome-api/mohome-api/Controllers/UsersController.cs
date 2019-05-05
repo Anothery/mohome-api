@@ -31,46 +31,7 @@ namespace mohome_api.Controllers
         public IActionResult Get()
         {
             return Ok(new { response = Newtonsoft.Json.JsonConvert.SerializeObject(db.GetProfiles()) });
-        }
-
-        /// <summary>
-        /// Registers a new user
-        /// </summary>
-        /// <response code="400">Your input data is incorrect</response>  
-        /// <response code="520">Unknown error</response>  
-        [AllowAnonymous]
-        [Route("sign-up")]
-        [HttpPost]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(520)]
-        public IActionResult SignUp([FromBody] RegisterModel model)
-        {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest("Your input data is incorrect");
-                };
-
-                IActionResult response;
-                if (!db.CheckProfileExists(model.Email))
-                {
-                    response = Conflict(new { error = "Profile already exists" });
-                    return response;
-                }
-
-                if (db.AddNewUser(model.Email, model.Password, model.Username))
-                {
-                    var controller = (TokenController)HttpContext.RequestServices.GetService(typeof(TokenController));
-                    return controller.CreateToken(new LoginModel { Email = model.Email, Password = model.Password });
-                }
-                return StatusCode(520, new { error = "Unknown error" });
-            }
-            catch(Exception ex)
-            {
-                return StatusCode(520, new { error = "Unknown error" });
-            }      
-        }
+        }   
 
     }
 }

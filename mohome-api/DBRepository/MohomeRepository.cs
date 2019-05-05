@@ -29,6 +29,17 @@ namespace DBRepository
             }
         }
 
+        public Profile GetProfile(int userId)
+        {
+            try
+            {
+                return db.Profile.Include(r => r.Role).Where(r => r.UserId == userId).FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
 
         public Profile GetProfile(string email)
         {
@@ -135,6 +146,65 @@ namespace DBRepository
             try
             {
                 return db.PhotoAlbum.Where(pa => pa.UserId == userId);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public async void AddRefreshToken(string token, int userId, DateTime creationDate, DateTime expirationDate)
+        {
+            try
+            {
+                var model = new RefreshToken
+                {
+                    UserId = userId,
+                    Token = token,
+                    CreationDate = creationDate,
+                    ExpirationDate = expirationDate
+                };
+
+                await db.RefreshToken.AddAsync(model);
+                await db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public bool CheckRefreshToken(string token, int userId)
+        {
+            try
+            {
+
+                var dbToken = db.RefreshToken.Where(t => t.Token == token && t.UserId == userId).FirstOrDefault();
+                if (dbToken is null){return false; }
+                int checkExpiration = DateTime.Compare(DateTime.Now, dbToken.ExpirationDate);
+                if(checkExpiration > 0)
+                {
+                    db.RefreshToken.Remove(dbToken);
+                    db.SaveChanges();
+                    return false;
+                }
+                //if valid
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public void DeleteRefreshToken(string token, int userId)
+        {
+            try
+            {
+
+                var dbToken = db.RefreshToken.Where(t => t.Token == token && t.UserId == userId).FirstOrDefault();
+                db.RefreshToken.Remove(dbToken);
+                db.SaveChanges();  
             }
             catch (Exception ex)
             {

@@ -30,23 +30,30 @@
              <response code="400">Your input data is incorrect</response>  
              <response code="520">Unknown error</response>  
         </member>
-        <member name="M:mohome_api.Controllers.TokenController.CreateToken(mohome_api.ViewModels.LoginModel)">
+        <member name="M:mohome_api.Controllers.TokenController.SignIn(mohome_api.ViewModels.LoginModel)">
             <summary>
-            Creates bearer token
+            Creates access and refresh tokens
             </summary>
-            
+            <response code="520">Unknown error</response>  
         </member>
-        <member name="M:mohome_api.Controllers.UsersController.Get">
-            <summary>
-            [TEST] returns profile list
-            </summary>
-        </member>
-        <member name="M:mohome_api.Controllers.UsersController.SignUp(mohome_api.ViewModels.RegisterModel)">
+        <member name="M:mohome_api.Controllers.TokenController.SignUp(mohome_api.ViewModels.RegisterModel)">
             <summary>
             Registers a new user
             </summary>
             <response code="400">Your input data is incorrect</response>  
             <response code="520">Unknown error</response>  
+        </member>
+        <member name="M:mohome_api.Controllers.TokenController.RefreshToken(mohome_api.ViewModels.RefreshTokenModel)">
+            <summary>
+            Refreshes tokens
+            </summary>
+            <response code="400">Your input data is incorrect</response>  
+            <response code="520">Unknown error</response>  
+        </member>
+        <member name="M:mohome_api.Controllers.UsersController.Get">
+            <summary>
+            [TEST] returns profile list
+            </summary>
         </member>
     </members>
 </doc>

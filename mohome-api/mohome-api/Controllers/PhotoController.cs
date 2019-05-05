@@ -68,7 +68,7 @@ namespace mohome_api.Controllers
                     albumsvm.Add(model);
                 }
 
-                return Ok(new { response = Newtonsoft.Json.JsonConvert.SerializeObject(albumsvm) });
+                return Ok(new { response = albumsvm });
             }
             catch (Exception ex)
             {
@@ -103,7 +103,7 @@ namespace mohome_api.Controllers
                 }
                 var userId = currentUser.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value;
 
-                var newAlbumId = db.CreateAlbum(model.AlbumName, model.Descrption, Convert.ToInt32(userId));
+                var newAlbumId = db.CreateAlbum(model.AlbumName, model.Description, Convert.ToInt32(userId));
                 if(newAlbumId <= 0)
                 {
                     // TODO: describe the error

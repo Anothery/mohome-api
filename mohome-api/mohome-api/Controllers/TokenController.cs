@@ -15,7 +15,7 @@ using mohome_api.Infrastructure;
 namespace mohome_api.Controllers
 {
     // TODO: trycatch and describing errors
-    [Route("api/[controller]")]
+    [Route("Api/[controller]")]
     [ApiController]
     public class TokenController : ControllerBase
     { 
@@ -29,27 +29,138 @@ namespace mohome_api.Controllers
         }
 
         /// <summary>
-        /// Creates bearer token
+        /// Creates access and refresh tokens
         /// </summary>
-        /// 
+        /// <response code="520">Unknown error</response>  
         [AllowAnonymous]
+        [Route("Sign-in")]
         [HttpPost]
-        public IActionResult CreateToken([FromBody] LoginModel login)
+        [ProducesResponseType(520)]
+        public IActionResult SignIn([FromBody] LoginModel login)
         {
-            IActionResult response = Unauthorized();
-            var user = Authenticate(login);
-
-            if (user != null)
+            try
             {
-                var tokenString = BuildToken(user);
-                response = Ok(new { response = new { token = tokenString } });
-            }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest("Your input data is incorrect");
+                };
 
-            return response;
+                IActionResult response = Unauthorized();
+                var user = Authenticate(login);
+
+                if (user != null)
+                {
+                    var accessTokenExp = DateTime.Now.AddMinutes(30);
+                    var refreshTokenExp = DateTime.Now.AddYears(1);
+                    var accessToken = BuildAccessToken(user, accessTokenExp);
+                    var refreshToken = BuildRefreshToken(user, refreshTokenExp);
+                    long unixExp = ((DateTimeOffset)accessTokenExp).ToUnixTimeSeconds();
+                    db.AddRefreshToken(refreshToken, user.Id, DateTime.Now , refreshTokenExp);
+                    var resp = new { response = new { accessToken, refreshToken, expiresIn = unixExp  } };
+                    response = Ok(resp);
+                }
+
+                return response;
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(520, new { error = $"Unknown error: {ex.Message}" });
+            }
         }
 
+        /// <summary>
+        /// Registers a new user
+        /// </summary>
+        /// <response code="400">Your input data is incorrect</response>  
+        /// <response code="520">Unknown error</response>  
+        [AllowAnonymous]
+        [Route("Sign-up")]
+        [HttpPost]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(520)]
+        public IActionResult SignUp([FromBody] RegisterModel model)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest("Your input data is incorrect");
+                };
 
-        private string BuildToken(UserModel user)
+                IActionResult response;
+                if (!db.CheckProfileExists(model.Email))
+                {
+                    response = Conflict(new { error = "Profile already exists" });
+                    return response;
+                }
+
+                if (db.AddNewUser(model.Email, model.Password, model.Username))
+                {
+                    return SignIn(new LoginModel { Email = model.Email, PasswordHash = model.Password });
+                }
+                return StatusCode(520, new { error = "Unknown error" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(520, new { error = $"Unknown error: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Refreshes tokens
+        /// </summary>
+        /// <response code="400">Your input data is incorrect</response>  
+        /// <response code="520">Unknown error</response>  
+        [AllowAnonymous]
+        [Route("Refresh-token")]
+        [HttpPost]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(520)]
+        public IActionResult RefreshToken([FromBody] RefreshTokenModel model)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest("Your input data is incorrect");
+                };
+
+                var token = new JwtSecurityTokenHandler().ReadJwtToken(model.RefreshToken);
+                var userId = Convert.ToInt32(token.Claims.First(c => c.Type == claimTypes.Id.ToString()).Value);
+
+                if(!db.CheckRefreshToken(model.RefreshToken, userId))
+                {
+                    return StatusCode(401, new { error = "Your refresh token is invalid" });
+                }
+
+                db.DeleteRefreshToken(model.RefreshToken, userId);
+
+                var profile = db.GetProfile(userId);
+                var user = new UserModel
+                { Name = profile.Name, Email = profile.Email, Role = profile.Role.Name, Id = profile.UserId };
+
+                if (user != null)
+                {
+                    var accessTokenExp = DateTime.Now.AddMinutes(30);
+                    var refreshTokenExp = DateTime.Now.AddYears(1);
+                    var accessToken = BuildAccessToken(user, accessTokenExp);
+                    var refreshToken = BuildRefreshToken(user, refreshTokenExp);
+                    long unixExp = ((DateTimeOffset)accessTokenExp).ToUnixTimeSeconds();
+                    db.AddRefreshToken(refreshToken, user.Id, DateTime.Now, refreshTokenExp);
+                    var resp = new { response = new { accessToken, refreshToken, expiresIn = unixExp } };
+                    return Ok(resp);
+                }
+
+                // TODO: describe the error
+                return StatusCode(500);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(520, new { error = $"Unknown error: {ex.Message}" });
+            }
+        }
+
+        private string BuildAccessToken(UserModel user, DateTime expiration)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -65,15 +176,36 @@ namespace mohome_api.Controllers
             var token = new JwtSecurityToken(_config["Jwt:Issuer"],
               _config["Jwt:Issuer"],
               claims,
-              expires: DateTime.Now.AddMinutes(45),
+              expires: expiration,
               signingCredentials: creds);
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
+
+        private string BuildRefreshToken(UserModel user, DateTime expiration)
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[] {
+                new Claim(claimTypes.Id.ToString(), user.Id.ToString())
+            };
+
+            var token = new JwtSecurityToken(_config["Jwt:Issuer"],
+                                             _config["Jwt:Issuer"],
+                                             claims,
+                                             expires: expiration,
+                                             signingCredentials: creds);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+
+
         private UserModel Authenticate(LoginModel login)
         {
             UserModel user = null;
-            var profile = db.GetProfile(login.Email, login.Password);
+            var profile = db.GetProfile(login.Email, login.PasswordHash);
 
             if (profile is null) return null;
             user = new UserModel { Name = profile.Name,  Email = login.Email, Role = profile.Role.Name, Id = profile.UserId};
