@@ -1,23 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using AutoMapper;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using DBRepository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using mohome_api.Infrastructure;
 using Swashbuckle.AspNetCore.Swagger;
+using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
+using mohome_api.API_Errors;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace mohome_api
 {
@@ -43,9 +43,11 @@ namespace mohome_api
                        .AllowCredentials();
             }));
 
+ 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                .AddJwtBearer(options =>
                {
+
                    options.TokenValidationParameters = new TokenValidationParameters
                    {
                        ValidateIssuer = true,
@@ -55,12 +57,26 @@ namespace mohome_api
                        ValidIssuer = Configuration["Jwt:Issuer"],
                        ValidAudience = Configuration["Jwt:Issuer"],
                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"])),
-                      // ClockSkew = TimeSpan.Zero
+                       // ClockSkew = TimeSpan.Zero
+                   };
+                   options.Events = new JwtBearerEvents
+                   {
+                       OnAuthenticationFailed = context =>
+                       {
+                           context.NoResult();
+                           context.Response.HttpContext.Response.Body.WriteAsync(Encoding.UTF8.GetBytes("test")).AsTask();
+                           return Task.CompletedTask;
+                       },
                    };
                });
 
+
             services.AddAutoMapper();
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddMvc(options => 
+            {
+                options.Filters.Add(new MohomeAuthorizeFilter(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build()));
+                
+            }).SetCompatibilityVersion(CompatibilityVersion.Version_2_1); ;
             services.AddMvc().AddControllersAsServices();
             services.AddSwaggerGen(c =>
             {

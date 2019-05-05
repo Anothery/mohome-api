@@ -73,7 +73,8 @@ namespace mohome_api.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(520, new { error = ex.InnerException.Message });
+                 return StatusCode(500, new { error = new { errorCode = ErrorList.UnknownError.Id,
+                                                           errorMessage = ex.Message }});
             }
             
         }
@@ -116,7 +117,8 @@ namespace mohome_api.Controllers
             }
             catch(Exception ex)
             {
-                return StatusCode(520, new { error = ex.InnerException.Message});
+                    return StatusCode(500, new { error = new { errorCode = ErrorList.UnknownError.Id,
+                                                           errorMessage = ex.Message }});
             }
         }
 

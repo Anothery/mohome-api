@@ -25,5 +25,6 @@ namespace mohome_api.API_Errors
         public static Error UndefinedUser = new Error(3, "Your user id is undefined", "Try to renew your access token");
         public static Error InvalidRefreshToken = new Error(10, "Invalid refresh token", "Try to renew your refresh token");
         public static Error UnauthorizedAction = new Error(50, "That action is not allowed to you.", "You have not access to that action");
+        public static Error Unauthorized = new Error(401, "You are unauthorized", "Sign in to mohome");
     }
 }

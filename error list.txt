@@ -1,0 +1,6 @@
+1 Unknown error occured
+Try again later
+2 Your input data is incorrect
+Make sure your input data is correct
+3 Your user id is undefined
+Try to reuse
