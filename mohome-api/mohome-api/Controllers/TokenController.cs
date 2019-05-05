@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using mohome_api.Infrastructure;
+using mohome_api.API_Errors;
 
 namespace mohome_api.Controllers
 {
@@ -50,7 +51,7 @@ namespace mohome_api.Controllers
 
                 if (user != null)
                 {
-                    var accessTokenExp = DateTime.Now.AddMinutes(30);
+                    var accessTokenExp = DateTime.Now.AddMinutes(20);
                     var refreshTokenExp = DateTime.Now.AddYears(1);
                     var accessToken = BuildAccessToken(user, accessTokenExp);
                     var refreshToken = BuildRefreshToken(user, refreshTokenExp);
@@ -64,7 +65,8 @@ namespace mohome_api.Controllers
             }
             catch(Exception ex)
             {
-                return StatusCode(520, new { error = $"Unknown error: {ex.Message}" });
+                return StatusCode(520, new { error = new { errorCode = ErrorList.UnknownError.Id,
+                                                           errorMessage = ex.Message }});
             }
         }
 
@@ -98,11 +100,14 @@ namespace mohome_api.Controllers
                 {
                     return SignIn(new LoginModel { Email = model.Email, PasswordHash = model.Password });
                 }
-                return StatusCode(520, new { error = "Unknown error" });
+                
+                 return StatusCode(520, new { error = new { errorCode = ErrorList.UnknownError.Id,
+                                                           errorMessage = ErrorList.UnknownError.Description}});
             }
             catch (Exception ex)
             {
-                return StatusCode(520, new { error = $"Unknown error: {ex.Message}" });
+               return StatusCode(520, new { error = new { errorCode = ErrorList.UnknownError.Id,
+                                                           errorMessage = ex.Message }});
             }
         }
 
@@ -122,15 +127,16 @@ namespace mohome_api.Controllers
             {
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest("Your input data is incorrect");
+                    return BadRequest(new { error = new { errorCode = ErrorList.InputDataError.Id,
+                                                          errorMessage = ErrorList.InputDataError.Description} });
                 };
 
-                var token = new JwtSecurityTokenHandler().ReadJwtToken(model.RefreshToken);
-                var userId = Convert.ToInt32(token.Claims.First(c => c.Type == claimTypes.Id.ToString()).Value);
+                var userId = TokenHelper.GetUserIdFromRefreshToken(model.RefreshToken);
 
                 if(!db.CheckRefreshToken(model.RefreshToken, userId))
                 {
-                    return StatusCode(401, new { error = "Your refresh token is invalid" });
+                    return StatusCode(401, new { error = new { errorCode = ErrorList.InputDataError.Id,
+                                                          errorMessage = ErrorList.InputDataError.Description} });
                 }
 
                 db.DeleteRefreshToken(model.RefreshToken, userId);
@@ -151,12 +157,13 @@ namespace mohome_api.Controllers
                     return Ok(resp);
                 }
 
-                // TODO: describe the error
-                return StatusCode(500);
+                return StatusCode(520, new { error = new { errorCode = ErrorList.UnknownError.Id,
+                                                           errorMessage = ErrorList.UnknownError.Description}});
             }
             catch (Exception ex)
             {
-                return StatusCode(520, new { error = $"Unknown error: {ex.Message}" });
+                return StatusCode(520, new { error = new { errorCode = ErrorList.UnknownError.Id,
+                                                           errorMessage = ex.Message}});
             }
         }
 

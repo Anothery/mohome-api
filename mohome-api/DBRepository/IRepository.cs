@@ -18,7 +18,7 @@ namespace DBRepository
 
         //photo
         int CreateAlbum(string name, string description, int userId);
-        bool DeleteAlbum(int albumId);
+        int DeleteAlbum(int albumId, int userId);
         IEnumerable<PhotoAlbum> GetPhotoAlbums(int userId);
 
         //refreshToken

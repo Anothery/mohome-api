@@ -28,6 +28,7 @@
             </summary>
              <response code="500">Failed to delete album. Try again</response>  
              <response code="400">Your input data is incorrect</response>  
+             <response code="401">Your user id is undefined</response>  
              <response code="520">Unknown error</response>  
         </member>
         <member name="M:mohome_api.Controllers.TokenController.SignIn(mohome_api.ViewModels.LoginModel)">

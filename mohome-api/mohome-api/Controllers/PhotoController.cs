@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using mohome_api.Infrastructure;
+using mohome_api.API_Errors;
 
 namespace mohome_api.Controllers
 {
@@ -124,12 +125,14 @@ namespace mohome_api.Controllers
         /// </summary>
         ///  <response code="500">Failed to delete album. Try again</response>  
         ///  <response code="400">Your input data is incorrect</response>  
+        ///  <response code="401">Your user id is undefined</response>  
         ///  <response code="520">Unknown error</response>  
 
         [Route("Album")]
         [HttpDelete, Authorize]
         [ProducesResponseType(500)]
         [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
         [ProducesResponseType(520)]
         public IActionResult DeleteAlbum([FromBody] DeleteAlbumModel model)
         {
@@ -140,16 +143,32 @@ namespace mohome_api.Controllers
                     return BadRequest("Your input data is incorrect");
                 };
 
-                var result =  db.DeleteAlbum(model.AlbumId);
-                if (!result)
+                var currentUser = HttpContext.User;
+                if (!currentUser.HasClaim(c => c.Type == claimTypes.Role.ToString()))
                 {
-                    return StatusCode(500, new { error = "Failed to delete album. Try again" });
+                    return StatusCode(401, new { error = new { errorCode = ErrorList.InvalidRefreshToken.Id,
+                                                               errorMessage = ErrorList.InvalidRefreshToken.Description}});
                 }
-                return Ok();
+
+                int userId;
+                int.TryParse(currentUser.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value,
+                             out userId);
+
+                var result =  db.DeleteAlbum(model.AlbumId, userId);
+
+                switch (result)
+                {
+                    case -1: return StatusCode(403, new { error = new { errorCode = ErrorList.UnauthorizedAction.Id,
+                                                                        errorMessage = ErrorList.UnauthorizedAction.Description } });
+                    case 0:  return Ok(new { response = 0 });
+               }
+
+                return Ok(new { response = 1});
             }
             catch (Exception ex)
             {
-                return StatusCode(520, new { error = ex.InnerException.Message });
+                return StatusCode(500, new { error = new { errorCode = ErrorList.UnknownError.Id,
+                                                           errorMessage = ex.Message }});
             }
         }
     }

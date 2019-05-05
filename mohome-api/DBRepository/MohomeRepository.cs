@@ -124,14 +124,17 @@ namespace DBRepository
 
         }
 
-        public bool DeleteAlbum(int albumId)
+        public int DeleteAlbum(int albumId, int userId)
         {
             try
             {
-                var album = db.PhotoAlbum.Where(a => a.AlbumId == albumId).FirstOrDefault();
+                var album = db.PhotoAlbum.Where(a => a.AlbumId == albumId && a.UserId == userId).FirstOrDefault();
+                //User tries to remove another album
+                if (album is null) return -1;
+
                 db.PhotoAlbum.Remove(album);
                 var result = db.SaveChanges();
-                return result > 0;
+                return result;
 
             }
             catch (Exception ex)
