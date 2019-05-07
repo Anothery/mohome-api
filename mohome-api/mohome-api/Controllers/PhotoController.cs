@@ -6,8 +6,11 @@ using DBRepository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using mohome_api.Infrastructure;
 using mohome_api.API_Errors;
+using System.Threading.Tasks;
+using static mohome_api.Options;
+using System.IO;
+using mohome_api.Filters;
 
 namespace mohome_api.Controllers
 {
@@ -16,67 +19,44 @@ namespace mohome_api.Controllers
     public class PhotoController : ControllerBase
     {
         private IRepository db;
-        private FileUploader uploader;
+        private string storage = LOCAL_STORAGE + PHOTO_PATH;
 
 
-        public PhotoController(IRepository db, FileUploader uploader)
+
+        public PhotoController(IRepository db)
         {
             this.db = db;
-            this.uploader = uploader;
-        }
-
-        
-        /// <summary>
-        /// [TEST] Generates unique name for photo
-        /// </summary>
-        [Route("Generate-name")]
-        [HttpGet]
-        public IActionResult GeneratePhotoName()
-        {
-            string key = Guid.NewGuid().ToString("N").Substring(0, 10);
-            return Ok(new { response = Newtonsoft.Json.JsonConvert.SerializeObject(key) });
         }
 
         /// <summary>
         /// Returns album list for current user
         /// </summary>
+        /// <response code="500">Internal server error</response> 
+
+        [ProducesResponseType(500)]
         [Route("Album")]
         [HttpGet, Authorize]
+        [UserActionFilter]
         public IActionResult GetAlbums()
         {
-            try
+            int userId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
+
+            var albums = db.GetPhotoAlbums(userId);
+
+            List<PhotoAlbumModel> albumsvm = new List<PhotoAlbumModel>();
+
+            foreach (var album in albums)
             {
-                var currentUser = HttpContext.User;
-                if (!currentUser.HasClaim(c => c.Type == claimTypes.Role.ToString()))
-                {
-                    return StatusCode(401, new { error = "Your user id is undefined" });
-                }
-
-                var userId = Convert.ToInt32(currentUser.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
-
-                var albums = db.GetPhotoAlbums(userId);
-
-                List<PhotoAlbumModel> albumsvm = new List<PhotoAlbumModel>();
-
-                foreach(var album in albums)
-                {
-                    var model = new PhotoAlbumModel();
-                    model.AlbumId = album.AlbumId;
-                    model.Created = album.Created;
-                    model.Description = album.Description;
-                    model.Name = album.Name;
-                    if (album.CoverPhotoId is null) { model.CoverPhotoPath = null; }
-                    albumsvm.Add(model);
-                }
-
-                return Ok(new { response = albumsvm });
+                var model = new PhotoAlbumModel();
+                model.AlbumId = album.AlbumId;
+                model.Created = album.Created;
+                model.Description = album.Description;
+                model.Name = album.Name;
+                if (album.CoverPhotoId is null) { model.CoverPhotoPath = null; }
+                albumsvm.Add(model);
             }
-            catch (Exception ex)
-            {
-                 return StatusCode(500, new { error = new { errorCode = ErrorList.UnknownError.Id,
-                                                           errorMessage = ex.Message }});
-            }
-            
+
+            return Ok(new { response = albumsvm });
         }
 
         /// <summary>
@@ -84,42 +64,26 @@ namespace mohome_api.Controllers
         /// </summary>
         ///  <response code="401">Your user id is undefined</response>  
         ///  <response code="400">Your input data is incorrect</response>  
-        ///  <response code="520">Unknown error</response>  
+        ///  <response code="500">Internal server error</response> 
+
         [Route("Album")]
+        [UserActionFilter]
         [HttpPost, Authorize]
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
-        [ProducesResponseType(520)]
+        [ProducesResponseType(500)]
         public IActionResult CreateAlbum([FromBody] CreateAlbumModel model)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest("Your input data is incorrect");
-                };
-                var currentUser = HttpContext.User;
-                if (!currentUser.HasClaim(c => c.Type == claimTypes.Role.ToString()))
-                {
-                    return StatusCode(401, new { error = "Your user id is undefined" });
-                }
-                var userId = currentUser.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value;
+            int userId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
 
-                var newAlbumId = db.CreateAlbum(model.AlbumName, model.Description, Convert.ToInt32(userId));
-                if(newAlbumId <= 0)
-                {
-                    // TODO: describe the error
-                    return StatusCode(500);
-                }        
-                string userAlbumPath = "/" + userId + "/" + newAlbumId;
-                uploader.CreateAlbum(userAlbumPath);
-                return Ok(new { response = "album has been created" });
-            }
-            catch(Exception ex)
+            var newAlbumId = db.CreateAlbum(model.AlbumName, model.Description, Convert.ToInt32(userId));
+
+            if (newAlbumId <= 0)
             {
-                    return StatusCode(500, new { error = new { errorCode = ErrorList.UnknownError.Id,
-                                                           errorMessage = ex.Message }});
+                return StatusCode(500, new ErrorDetails() { errorId = ErrorList.UnknownError.Id, errorMessage = ErrorList.UnknownError.Description });
             }
+
+            return Ok(new { response = new { albumId = newAlbumId } });
         }
 
         /// <summary>
@@ -128,50 +92,136 @@ namespace mohome_api.Controllers
         ///  <response code="500">Failed to delete album. Try again</response>  
         ///  <response code="400">Your input data is incorrect</response>  
         ///  <response code="401">Your user id is undefined</response>  
-        ///  <response code="520">Unknown error</response>  
+        ///  <response code="500">Internal server error</response> 
 
         [Route("Album")]
         [HttpDelete, Authorize]
+        [ModelActionFilter]
+        [UserActionFilter]
         [ProducesResponseType(500)]
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
         [ProducesResponseType(520)]
         public IActionResult DeleteAlbum([FromBody] DeleteAlbumModel model)
         {
-            try
+            int userId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
+
+            var result = db.DeleteAlbum(model.AlbumId, userId);
+
+            switch (result)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest("Your input data is incorrect");
-                };
-
-                var currentUser = HttpContext.User;
-                if (!currentUser.HasClaim(c => c.Type == claimTypes.Role.ToString()))
-                {
-                    return StatusCode(401, new { error = new { errorCode = ErrorList.InvalidRefreshToken.Id,
-                                                               errorMessage = ErrorList.InvalidRefreshToken.Description}});
-                }
-
-                int userId;
-                int.TryParse(currentUser.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value,
-                             out userId);
-
-                var result =  db.DeleteAlbum(model.AlbumId, userId);
-
-                switch (result)
-                {
-                    case -1: return StatusCode(403, new { error = new { errorCode = ErrorList.UnauthorizedAction.Id,
-                                                                        errorMessage = ErrorList.UnauthorizedAction.Description } });
-                    case 0:  return Ok(new { response = 0 });
-               }
-
-                return Ok(new { response = 1});
+                case -1:
+                    return StatusCode(403, new ErrorDetails()
+                    {
+                        errorId = ErrorList.UnauthorizedAction.Id,
+                        errorMessage = ErrorList.UnauthorizedAction.Description
+                    });
+                case 0: return Ok(new { response = 0 });
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = new { errorCode = ErrorList.UnknownError.Id,
-                                                           errorMessage = ex.Message }});
-            }
+
+            return Ok(new { response = 1 });
         }
+
+        /// <summary>
+        /// Uploads a photo
+        /// </summary>
+        ///  <response code="500">Uploading error</response>  
+        ///  <response code="400">Wrong size</response>  
+        ///  <response code="401">Your user id is undefined</response>  
+        ///  <response code="500">Internal server error</response> 
+
+        [ModelActionFilter]
+        [UserActionFilter]
+        [ProducesResponseType(500)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(520)]
+        [HttpPost, Authorize]
+        public async Task<IActionResult> UploadPhoto([FromForm] PhotoFile file)
+        {
+            var photo = file.Photo;
+            var sizeMB = photo.Length / 1024 / 1000;
+            if (sizeMB > 10)
+            {
+                return StatusCode(400, new ErrorDetails()
+                {
+                    errorId = ErrorList.WrongSize.Id,
+                    errorMessage = ErrorList.WrongSize.Description
+                });
+            }
+
+            int userId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
+            int? albumId = file.AlbumId;
+            var extension = Path.GetExtension(photo.FileName).Replace(".", "");
+
+            var newFilename = $"{DateTime.Now.ToString().GetHashCode().ToString("x")}.{extension}";
+            var additionalPath = $"/{userId}/{newFilename}";
+
+            db.AddPhoto(newFilename, userId, albumId, additionalPath);
+
+
+            string path = storage + additionalPath;
+
+            if (!Directory.Exists(Path.GetDirectoryName(path)))
+                Directory.CreateDirectory(Path.GetDirectoryName(path));
+
+            using (var fileStream = new FileStream(path, FileMode.Create))
+            {
+                await photo.CopyToAsync(fileStream);
+            }
+
+            return Ok(new { response = new { imagePath = PHOTO_STORAGE_PATH + $"/{newFilename}" } });
+        }
+
+        /// <summary>
+        /// Returns photo by photo name
+        /// </summary>
+        ///  <response code="500">Uploading error</response>  
+        ///  <response code="500">Internal server error</response> 
+        ///  <response code="404">File not found</response>  
+        ///  <response code="401">Your user id is undefined</response>  
+
+        [ProducesResponseType(500)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(401)]
+        [Route("{photoName}")]
+        [HttpGet, Authorize]
+        public IActionResult GetPhoto(string photoName)
+        {
+            int userId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
+
+            var extension = Path.GetExtension(photoName).Replace(".", ""); ;
+
+            var path = db.GetPhotoPath(userId, photoName);
+
+            if (path is null || path == string.Empty)
+            {
+                return StatusCode(404, new ErrorDetails() { errorId = ErrorList.FileNotFound.Id, errorMessage = ErrorList.FileNotFound.Description });
+            }
+
+            return File(System.IO.File.OpenRead(storage + path), $"image/{extension}");
+        }
+
+
+
+        /// <summary>
+        /// Returns photos by albumId
+        /// </summary>
+        ///  <response code="500">Internal server error</response>  
+        ///  <response code="401">Your user id is undefined</response>  
+
+        [ProducesResponseType(500)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(401)]
+        [UserActionFilter]
+        [HttpGet, Authorize]
+        public IActionResult GetPhotoByAlbum([FromQuery(Name = "albumId")] int albumId)
+        {
+            int userId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
+            var photos = db.GetPhotosByAlbum(userId, albumId);
+            return Ok(new { response = AutoMapper.Mapper.Map<List<PhotosViewModel>>(photos) });
+        }
+
+
     }
 }

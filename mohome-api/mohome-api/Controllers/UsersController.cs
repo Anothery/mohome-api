@@ -6,17 +6,16 @@ using DBRepository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using mohome_api.API_Errors;
 using mohome_api.ViewModels;
 using static mohome_api.Controllers.TokenController;
 
 namespace mohome_api.Controllers
 {
-    // TODO: trycatch and describing errors
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
     {
-
         IRepository db;
 
         public UsersController(IRepository rep)
@@ -25,12 +24,18 @@ namespace mohome_api.Controllers
         }
 
         /// <summary>
-        /// [TEST] returns profile list
+        /// Returns Ok result if user with the email exist in the database
         /// </summary>
-        [HttpGet, Authorize]
-        public IActionResult Get()
+ 
+        [AllowAnonymous]
+        [HttpGet]
+        public IActionResult CheckUserExists([FromQuery(Name = "email")] string email)
         {
-            return Ok(new { response = Newtonsoft.Json.JsonConvert.SerializeObject(db.GetProfiles()) });
+            if (db.CheckProfileExists(email))
+            {
+                return Ok(new { response = 1 });
+            }
+            return NotFound(new ErrorDetails() { errorId = ErrorList.UserNotFound.Id, errorMessage = ErrorList.UserNotFound.Description });
         }   
 
     }

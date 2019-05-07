@@ -19,69 +19,32 @@ namespace DBRepository
 
         public IEnumerable<Profile> GetProfiles()
         {
-            try
-            {
                 return db.Profile;
-            }
-            catch(Exception ex)
-            {
-                throw ex;
-            }
         }
 
         public Profile GetProfile(int userId)
         {
-            try
-            {
                 return db.Profile.Include(r => r.Role).Where(r => r.UserId == userId).FirstOrDefault();
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
         }
 
         public Profile GetProfile(string email)
         {
-            try
-            {
                 return db.Profile.Include(r => r.Role).Where(r => r.Email == email).FirstOrDefault();
-            }
-            catch(Exception ex)
-            {
-                throw ex;
-            }
         }
 
         public Profile GetProfile(string email, string password)
         {
-            try
-            {
                 return db.Profile.Include(r => r.Role).Where(r => r.Email == email && r.Password == password).FirstOrDefault();
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
         }
 
 
         public bool CheckProfileExists(string email)
         {
-            try
-            { 
-            return db.Profile.FirstOrDefault(r => r.Email == email) is null;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            return !(db.Profile.FirstOrDefault(r => r.Email == email) is null);
         }
 
         public bool AddNewUser(string email, string password, string name)
         {
-            try
-            { 
             var newUser = new Profile()
             {
                 Email = email,
@@ -95,17 +58,11 @@ namespace DBRepository
 
             if (result > 0) return true;
             return false;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
         }
 
         public int CreateAlbum(string name, string description, int userId)
         {
-            try
-            {
+
                 var newAlbum = new PhotoAlbum
                 {
                     Name = name,
@@ -115,19 +72,10 @@ namespace DBRepository
                 db.PhotoAlbum.Add(newAlbum);
                 db.SaveChanges();
                 return newAlbum.AlbumId;
-
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-
         }
 
         public int DeleteAlbum(int albumId, int userId)
         {
-            try
-            {
                 var album = db.PhotoAlbum.Where(a => a.AlbumId == albumId && a.UserId == userId).FirstOrDefault();
                 //User tries to remove another album
                 if (album is null) return -1;
@@ -135,31 +83,15 @@ namespace DBRepository
                 db.PhotoAlbum.Remove(album);
                 var result = db.SaveChanges();
                 return result;
-
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-
         }
 
         public IEnumerable<PhotoAlbum> GetPhotoAlbums(int userId)
         {
-            try
-            {
                 return db.PhotoAlbum.Where(pa => pa.UserId == userId);
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
         }
 
         public async void AddRefreshToken(string token, int userId, DateTime creationDate, DateTime expirationDate)
         {
-            try
-            {
                 var model = new RefreshToken
                 {
                     UserId = userId,
@@ -170,18 +102,10 @@ namespace DBRepository
 
                 await db.RefreshToken.AddAsync(model);
                 await db.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
         }
 
         public bool CheckRefreshToken(string token, int userId)
         {
-            try
-            {
-
                 var dbToken = db.RefreshToken.Where(t => t.Token == token && t.UserId == userId).FirstOrDefault();
                 if (dbToken is null){return false; }
                 int checkExpiration = DateTime.Compare(DateTime.Now, dbToken.ExpirationDate);
@@ -193,26 +117,44 @@ namespace DBRepository
                 }
                 //if valid
                 return true;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
         }
 
         public void DeleteRefreshToken(string token, int userId)
         {
-            try
-            {
-
                 var dbToken = db.RefreshToken.Where(t => t.Token == token && t.UserId == userId).FirstOrDefault();
                 db.RefreshToken.Remove(dbToken);
                 db.SaveChanges();  
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
         }
+
+        public async void AddPhoto(string name, int userId, int? albumid,  string path)
+        {
+                var model = new Photo
+                {
+                    Created = DateTime.Now,
+                    AlbumId = albumid == 0 ? null : albumid,
+                    UserId = userId,
+                    Path = path,
+                    Name = name
+                };
+
+                await db.Photo.AddAsync(model);
+                await db.SaveChangesAsync();
+        }
+
+        public string GetPhotoPath(int userId, string photoName)
+        {
+                var photo = db.Photo.Where(r => r.UserId == userId && r.Name == photoName).FirstOrDefault();
+                if (photo is null) return null;
+                return photo.Path;
+        }
+
+
+
+        public IEnumerable<Photo> GetPhotosByAlbum(int userId, int albumId)
+        {
+                var photo = db.Photo.Where(r => r.UserId == userId && r.AlbumId == albumId);
+                return photo;
+        }
+
     }
 }

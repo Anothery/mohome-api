@@ -12,7 +12,7 @@ namespace mohome_api.Infrastructure
     {
         public MappingProfile()
         { 
-            CreateMap<List<PhotoAlbum>, List<PhotoAlbumModel>>();
+            CreateMap<List<Photo>, List<PhotosViewModel>>();
         }
     }
 }

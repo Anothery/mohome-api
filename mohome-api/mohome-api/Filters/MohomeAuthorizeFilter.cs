@@ -9,9 +9,10 @@ using mohome_api.API_Errors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
-namespace mohome_api.Infrastructure
+namespace mohome_api.Filters
 {
     public class MohomeAuthorizeFilter : IAsyncAuthorizationFilter
     {
@@ -42,7 +43,7 @@ namespace mohome_api.Infrastructure
             if (authorizeResult.Challenged)
             {
                 // Return custom 401 result
-                context.Result = new JsonResult(new { error = new { errorCode = ErrorList.Unauthorized.Id,
+                context.Result = new UnauthorizedErrorResult(new { error = new { errorCode = ErrorList.Unauthorized.Id,
                                                                     errorMessage = ErrorList.Unauthorized.Description} });
             }
             else if (authorizeResult.Forbidden)
@@ -50,6 +51,26 @@ namespace mohome_api.Infrastructure
                 // Return default 403 result
                 context.Result = new ForbidResult(Policy.AuthenticationSchemes.ToArray());
             }
+        }
+
+      
+
+        public class UnauthorizedErrorResult : JsonResult
+        {
+            private readonly HttpStatusCode _httpStatus;
+
+            public UnauthorizedErrorResult(object data) : base(data)
+            {
+                _httpStatus = HttpStatusCode.Unauthorized;
+            }
+
+
+            public async override Task ExecuteResultAsync(ActionContext context)
+            {
+                context.HttpContext.Response.StatusCode = (int)_httpStatus;
+                await base.ExecuteResultAsync(context);
+            }
+     
         }
     }
 }

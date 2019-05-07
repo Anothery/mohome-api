@@ -1,19 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace Models
+namespace mohome_api.ViewModels
 {
-    public class Photo
+    public class PhotosViewModel
     {
         public int PhotoId { get; set; }
         public DateTime Created { get; set; }
-        public string Path { get; set; }
         public string Caption { get; set; }
+        public string Extension { get; set; }
         public string Name { get; set; }
-        public int UserId { get; set; }
-        public virtual Profile Profile { get; set; }
         public int? AlbumId { get; set; }
-        public virtual PhotoAlbum Album { get; set; }
     }
 }

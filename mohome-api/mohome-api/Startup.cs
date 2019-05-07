@@ -18,6 +18,7 @@ using Newtonsoft.Json;
 using mohome_api.API_Errors;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using mohome_api.Filters;
 
 namespace mohome_api
 {
@@ -33,7 +34,11 @@ namespace mohome_api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-              Mapper.Initialize(cfg => cfg.AddProfile<MappingProfile>());
+            Mapper.Initialize(cfg => cfg.AddProfile<MappingProfile>());
+            services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.SuppressModelStateInvalidFilter = true;
+            });
             services.AddAutoMapper();
             services.AddCors(o => o.AddPolicy("CORSPolicy", builder =>
             {
@@ -59,21 +64,13 @@ namespace mohome_api
                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"])),
                        // ClockSkew = TimeSpan.Zero
                    };
-                   options.Events = new JwtBearerEvents
-                   {
-                       OnAuthenticationFailed = context =>
-                       {
-                           context.NoResult();
-                           context.Response.HttpContext.Response.Body.WriteAsync(Encoding.UTF8.GetBytes("test")).AsTask();
-                           return Task.CompletedTask;
-                       },
-                   };
                });
 
 
             services.AddAutoMapper();
             services.AddMvc(options => 
             {
+                options.Filters.Add(new ModelActionFilter());
                 options.Filters.Add(new MohomeAuthorizeFilter(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build()));
                 
             }).SetCompatibilityVersion(CompatibilityVersion.Version_2_1); ;
@@ -87,7 +84,6 @@ namespace mohome_api
             });
 
             services.AddTransient<IRepository, MohomeRepository>();
-            services.AddSingleton<FileUploader>();
             services.AddTransient<MohomeContext>();
         }
 
@@ -114,6 +110,8 @@ namespace mohome_api
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Mohome API V1");
                 c.RoutePrefix = string.Empty;
             });
+
+            app.ConfigureExceptionHandler();
 
             app.UseHttpsRedirection();
             app.UseMvc();

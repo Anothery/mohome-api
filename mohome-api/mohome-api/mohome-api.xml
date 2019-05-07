@@ -4,15 +4,11 @@
         <name>mohome-api</name>
     </assembly>
     <members>
-        <member name="M:mohome_api.Controllers.PhotoController.GeneratePhotoName">
-            <summary>
-            [TEST] Generates unique name for photo
-            </summary>
-        </member>
         <member name="M:mohome_api.Controllers.PhotoController.GetAlbums">
             <summary>
             Returns album list for current user
             </summary>
+            <response code="500">Internal server error</response> 
         </member>
         <member name="M:mohome_api.Controllers.PhotoController.CreateAlbum(mohome_api.ViewModels.CreateAlbumModel)">
             <summary>
@@ -20,7 +16,7 @@
             </summary>
              <response code="401">Your user id is undefined</response>  
              <response code="400">Your input data is incorrect</response>  
-             <response code="520">Unknown error</response>  
+             <response code="500">Internal server error</response> 
         </member>
         <member name="M:mohome_api.Controllers.PhotoController.DeleteAlbum(mohome_api.ViewModels.DeleteAlbumModel)">
             <summary>
@@ -29,31 +25,57 @@
              <response code="500">Failed to delete album. Try again</response>  
              <response code="400">Your input data is incorrect</response>  
              <response code="401">Your user id is undefined</response>  
-             <response code="520">Unknown error</response>  
+             <response code="500">Internal server error</response> 
+        </member>
+        <member name="M:mohome_api.Controllers.PhotoController.UploadPhoto(mohome_api.ViewModels.PhotoFile)">
+            <summary>
+            Uploads a photo
+            </summary>
+             <response code="500">Uploading error</response>  
+             <response code="400">Wrong size</response>  
+             <response code="401">Your user id is undefined</response>  
+             <response code="500">Internal server error</response> 
+        </member>
+        <member name="M:mohome_api.Controllers.PhotoController.GetPhoto(System.String)">
+            <summary>
+            Returns photo by photo name
+            </summary>
+             <response code="500">Uploading error</response>  
+             <response code="500">Internal server error</response> 
+             <response code="404">File not found</response>  
+             <response code="401">Your user id is undefined</response>  
+        </member>
+        <member name="M:mohome_api.Controllers.PhotoController.GetPhotoByAlbum(System.Int32)">
+            <summary>
+            Returns photos by albumId
+            </summary>
+             <response code="500">Internal server error</response>  
+             <response code="401">Your user id is undefined</response>  
         </member>
         <member name="M:mohome_api.Controllers.TokenController.SignIn(mohome_api.ViewModels.LoginModel)">
             <summary>
             Creates access and refresh tokens
             </summary>
-            <response code="520">Unknown error</response>  
+            <response code="500">Internal server error</response>  
         </member>
         <member name="M:mohome_api.Controllers.TokenController.SignUp(mohome_api.ViewModels.RegisterModel)">
             <summary>
             Registers a new user
             </summary>
             <response code="400">Your input data is incorrect</response>  
-            <response code="520">Unknown error</response>  
+            <response code="401">You are unauthorized</response>  
+            <response code="500">Internal server error</response>  
         </member>
         <member name="M:mohome_api.Controllers.TokenController.RefreshToken(mohome_api.ViewModels.RefreshTokenModel)">
             <summary>
             Refreshes tokens
             </summary>
             <response code="400">Your input data is incorrect</response>  
-            <response code="520">Unknown error</response>  
+            <response code="500">Internal server error</response>  
         </member>
-        <member name="M:mohome_api.Controllers.UsersController.Get">
+        <member name="M:mohome_api.Controllers.UsersController.CheckUserExists(System.String)">
             <summary>
-            [TEST] returns profile list
+            Returns Ok result if user with the email exist in the database
             </summary>
         </member>
     </members>
