@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using static mohome_api.Options;
 using System.IO;
 using mohome_api.Filters;
+using Models;
+using mohome_api.ViewModels.Photo;
 
 namespace mohome_api.Controllers
 {
@@ -76,7 +78,34 @@ namespace mohome_api.Controllers
         {
             int userId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
 
-            var newAlbumId = db.CreateAlbum(model.AlbumName, model.Description, Convert.ToInt32(userId));
+            var newAlbumId = db.CreateAlbum(model.AlbumName, model.Description, userId);
+
+            if (newAlbumId <= 0)
+            {
+                return StatusCode(500, new ErrorDetails() { errorId = ErrorList.UnknownError.Id, errorMessage = ErrorList.UnknownError.Description });
+            }
+
+            return Ok(new { response = new { albumId = newAlbumId } });
+        }
+
+
+        /// <summary>
+        /// Updates an album
+        /// </summary>
+        ///  <response code="401">Your user id is undefined</response>  
+        ///  <response code="400">Your input data is incorrect</response>  
+        ///  <response code="500">Internal server error</response> 
+        [Route("Album")]
+        [UserActionFilter]
+        [HttpPut, Authorize]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(500)]
+        public IActionResult ChangeAlbum([FromBody] ChangeAlbumModel model)
+        {
+            int userId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
+
+            var newAlbumId = db.ChangeAlbum(model.albumId, model.AlbumName, model.Description, userId);
 
             if (newAlbumId <= 0)
             {
@@ -106,7 +135,22 @@ namespace mohome_api.Controllers
         {
             int userId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
 
+            // Delete photos from storage             
+            var photosToDelete = db.GetPhotosByAlbum(userId, model.AlbumId);
+            foreach (var photo in photosToDelete)
+            {
+                if(System.IO.File.Exists(storage + photo.Path))
+                {
+                    System.IO.File.Delete(storage + photo.Path);
+                }
+            }
+            
+
             var result = db.DeleteAlbum(model.AlbumId, userId);
+
+            var path = $"{storage}/{userId}/{model.AlbumId}";
+            if (!Directory.Exists(Path.GetDirectoryName(path)))
+                Directory.Delete(Path.GetDirectoryName(path));
 
             switch (result)
             {
@@ -159,7 +203,7 @@ namespace mohome_api.Controllers
 
             db.AddPhoto(newFilename, userId, albumId, additionalPath);
 
-
+                
             string path = storage + additionalPath;
 
             if (!Directory.Exists(Path.GetDirectoryName(path)))
@@ -205,23 +249,68 @@ namespace mohome_api.Controllers
 
 
         /// <summary>
-        /// Returns photos by albumId
+        /// Returns photos by albumId. If albumId is null, returns all photos
         /// </summary>
         ///  <response code="500">Internal server error</response>  
         ///  <response code="401">Your user id is undefined</response>  
 
+        [HttpGet, Authorize]
         [ProducesResponseType(500)]
         [ProducesResponseType(404)]
         [ProducesResponseType(401)]
         [UserActionFilter]
-        [HttpGet, Authorize]
-        public IActionResult GetPhotoByAlbum([FromQuery(Name = "albumId")] int albumId)
+        public IActionResult GetPhotos([FromQuery(Name = "albumId")] int? albumId)
         {
             int userId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
-            var photos = db.GetPhotosByAlbum(userId, albumId);
-            return Ok(new { response = AutoMapper.Mapper.Map<List<PhotosViewModel>>(photos) });
+
+            IEnumerable<Photo> photos;
+
+            if(albumId is null)
+            {
+                photos = db.GetAllPhotos(userId);
+            }
+            else
+            {
+                photos = db.GetPhotosByAlbum(userId, (int) albumId);
+            }
+
+            List<PhotosViewModel> list = new List<PhotosViewModel>();
+            foreach(var photo in photos)
+            {
+                var model = new PhotosViewModel
+                {
+                    Name = photo.Name,
+                    AlbumId = photo.AlbumId,
+                    Caption = photo.Caption,
+                    Created = photo.Created,
+                    URL = $"{PHOTO_STORAGE_PATH}/{photo.Name}"
+                };
+                list.Add(model);
+            }
+            return Ok(new { response = list });
         }
 
+        /// <summary>
+        /// Updates a photo description
+        /// </summary>
+        ///  <response code="401">Your user id is undefined</response>  
+        ///  <response code="400">Your input data is incorrect</response>  
+        ///  <response code="500">Internal server error</response> 
+        [UserActionFilter]
+        [HttpPatch, Authorize]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(500)]
+        public IActionResult ChangePhotoDescription([FromBody] ChangePhotoDescription model)
+        {
+            int userId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
+
+            var result = db.ChangePhotoDescription(model.photoName, model.Description, userId);
+            
+            if(result > 0) return Ok(new { response = 1});
+
+            throw new Exception("Unknown error");
+        }
 
     }
 }

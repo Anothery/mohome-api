@@ -24,6 +24,10 @@ namespace DBRepository
         void AddPhoto(string name, int userId, int? albumid, string path);
         string GetPhotoPath(int userId, string photoName);
         IEnumerable<Photo> GetPhotosByAlbum(int userId, int albumId);
+        IEnumerable<Photo> GetAllPhotos(int userId);
+        int ChangeAlbum(int albumId, string name, string description, int userId);
+        int ChangePhotoDescription(string photoName, string description, int userId);
+
 
         //refreshToken
         void AddRefreshToken(string token, int userId, DateTime creationDate, DateTime expirationDate);

@@ -43,7 +43,7 @@ namespace mohome_api.Controllers
 
             if (user != null)
             {
-                var accessTokenExp = DateTime.Now.AddMinutes(20);
+                var accessTokenExp = DateTime.Now.AddMinutes(100);
                 var refreshTokenExp = DateTime.Now.AddYears(1);
                 var accessToken = BuildAccessToken(user, accessTokenExp);
                 var refreshToken = BuildRefreshToken(user, refreshTokenExp);

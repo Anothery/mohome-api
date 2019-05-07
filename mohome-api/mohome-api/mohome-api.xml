@@ -18,6 +18,14 @@
              <response code="400">Your input data is incorrect</response>  
              <response code="500">Internal server error</response> 
         </member>
+        <member name="M:mohome_api.Controllers.PhotoController.ChangeAlbum(mohome_api.ViewModels.ChangeAlbumModel)">
+            <summary>
+            Updates an album
+            </summary>
+             <response code="401">Your user id is undefined</response>  
+             <response code="400">Your input data is incorrect</response>  
+             <response code="500">Internal server error</response> 
+        </member>
         <member name="M:mohome_api.Controllers.PhotoController.DeleteAlbum(mohome_api.ViewModels.DeleteAlbumModel)">
             <summary>
             Deletes a specific album
@@ -45,12 +53,20 @@
              <response code="404">File not found</response>  
              <response code="401">Your user id is undefined</response>  
         </member>
-        <member name="M:mohome_api.Controllers.PhotoController.GetPhotoByAlbum(System.Int32)">
+        <member name="M:mohome_api.Controllers.PhotoController.GetPhotos(System.Nullable{System.Int32})">
             <summary>
-            Returns photos by albumId
+            Returns photos by albumId. If albumId is null, returns all photos
             </summary>
              <response code="500">Internal server error</response>  
              <response code="401">Your user id is undefined</response>  
+        </member>
+        <member name="M:mohome_api.Controllers.PhotoController.ChangePhotoDescription(mohome_api.ViewModels.Photo.ChangePhotoDescription)">
+            <summary>
+            Updates a photo description
+            </summary>
+             <response code="401">Your user id is undefined</response>  
+             <response code="400">Your input data is incorrect</response>  
+             <response code="500">Internal server error</response> 
         </member>
         <member name="M:mohome_api.Controllers.TokenController.SignIn(mohome_api.ViewModels.LoginModel)">
             <summary>

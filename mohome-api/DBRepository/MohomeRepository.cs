@@ -74,6 +74,16 @@ namespace DBRepository
                 return newAlbum.AlbumId;
         }
 
+        public int ChangeAlbum(int albumId, string name, string description, int userId)
+        {
+            var album = db.PhotoAlbum.SingleOrDefault(r => r.AlbumId == albumId && r.UserId == userId);
+            if (album is null) { return -1; }
+            album.Description = description;
+            album.Name = name;
+            return db.SaveChanges();
+        }
+
+
         public int DeleteAlbum(int albumId, int userId)
         {
                 var album = db.PhotoAlbum.Where(a => a.AlbumId == albumId && a.UserId == userId).FirstOrDefault();
@@ -152,8 +162,23 @@ namespace DBRepository
 
         public IEnumerable<Photo> GetPhotosByAlbum(int userId, int albumId)
         {
-                var photo = db.Photo.Where(r => r.UserId == userId && r.AlbumId == albumId);
+                var photo = db.Photo.Where(r => r.UserId == userId && r.AlbumId == albumId).OrderBy(r => r.Created);
                 return photo;
+        }
+
+        public IEnumerable<Photo> GetAllPhotos(int userId)
+        {
+            var photo = db.Photo.Where(r => r.UserId == userId).OrderBy(r => r.Created);
+            return photo;
+        }
+
+        public int ChangePhotoDescription(string photoName, string description, int userId)
+        {
+            var photo = db.Photo.SingleOrDefault(r => r.UserId == userId && r.Name == photoName);
+
+            photo.Caption = description;
+
+            return db.SaveChanges();
         }
 
     }
