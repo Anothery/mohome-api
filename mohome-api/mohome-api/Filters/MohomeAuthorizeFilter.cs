@@ -43,8 +43,14 @@ namespace mohome_api.Filters
             if (authorizeResult.Challenged)
             {
                 // Return custom 401 result
-                context.Result = new UnauthorizedErrorResult(new { error = new { errorCode = ErrorList.Unauthorized.Id,
-                                                                    errorMessage = ErrorList.Unauthorized.Description} });
+                context.Result = new UnauthorizedErrorResult(new
+                {
+                    error = new
+                    {
+                        errorCode = ErrorList.Unauthorized.Id,
+                        errorMessage = ErrorList.Unauthorized.Description
+                    }
+                });
             }
             else if (authorizeResult.Forbidden)
             {
@@ -53,7 +59,7 @@ namespace mohome_api.Filters
             }
         }
 
-      
+
 
         public class UnauthorizedErrorResult : JsonResult
         {
@@ -70,7 +76,7 @@ namespace mohome_api.Filters
                 context.HttpContext.Response.StatusCode = (int)_httpStatus;
                 await base.ExecuteResultAsync(context);
             }
-     
+
         }
     }
 }

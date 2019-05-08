@@ -46,7 +46,7 @@
         </member>
         <member name="M:mohome_api.Controllers.PhotoController.GetPhoto(System.String)">
             <summary>
-            Returns photo by photo name
+            Returns base64 photo by photo name
             </summary>
              <response code="500">Uploading error</response>  
              <response code="500">Internal server error</response> 

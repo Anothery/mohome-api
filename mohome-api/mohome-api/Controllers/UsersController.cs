@@ -26,7 +26,7 @@ namespace mohome_api.Controllers
         /// <summary>
         /// Returns Ok result if user with the email exist in the database
         /// </summary>
- 
+
         [AllowAnonymous]
         [HttpGet]
         public IActionResult CheckUserExists([FromQuery(Name = "email")] string email)
@@ -36,7 +36,7 @@ namespace mohome_api.Controllers
                 return Ok(new { response = 1 });
             }
             return NotFound(new ErrorDetails() { errorId = ErrorList.UserNotFound.Id, errorMessage = ErrorList.UserNotFound.Description });
-        }   
+        }
 
     }
 }

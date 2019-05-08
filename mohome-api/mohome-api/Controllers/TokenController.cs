@@ -69,7 +69,6 @@ namespace mohome_api.Controllers
         [Route("Sign-up")]
         [HttpPost]
         [ModelActionFilter]
-        [UserActionFilter]
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
         [ProducesResponseType(500)]

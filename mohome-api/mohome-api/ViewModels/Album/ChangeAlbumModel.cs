@@ -12,7 +12,10 @@ namespace mohome_api.ViewModels
         public int albumId { get; set; }
         [Required]
         public string AlbumName { get; set; }
+
         [StringLength(100)]
         public string Description { get; set; }
+
+        public string CoverPhotoName { get; set; }
     }
 }

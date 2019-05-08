@@ -6,8 +6,8 @@ using DBRepository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using mohome_api.API_Errors;
 using System.Threading.Tasks;
+using mohome_api.API_Errors;
 using static mohome_api.Options;
 using System.IO;
 using mohome_api.Filters;
@@ -54,7 +54,17 @@ namespace mohome_api.Controllers
                 model.Created = album.Created;
                 model.Description = album.Description;
                 model.Name = album.Name;
-                if (album.CoverPhotoId is null) { model.CoverPhotoPath = null; }
+                model.PhotoCount = album.Photos.Count;
+                if (album.CoverPhotoId is null)
+                {
+                    var photoName = db.GetLastAlbumPhotoName(album.AlbumId, userId);
+                    if (photoName != null)
+                    {
+                        model.CoverPhotoName = photoName;
+                    }
+
+                }
+                else { model.CoverPhotoName = db.GetPhotoName(userId, (int)album.CoverPhotoId); };
                 albumsvm.Add(model);
             }
 
@@ -105,7 +115,7 @@ namespace mohome_api.Controllers
         {
             int userId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
 
-            var newAlbumId = db.ChangeAlbum(model.albumId, model.AlbumName, model.Description, userId);
+            var newAlbumId = db.ChangeAlbum(model.albumId, model.AlbumName, model.Description, model.CoverPhotoName, userId);
 
             if (newAlbumId <= 0)
             {
@@ -139,12 +149,12 @@ namespace mohome_api.Controllers
             var photosToDelete = db.GetPhotosByAlbum(userId, model.AlbumId);
             foreach (var photo in photosToDelete)
             {
-                if(System.IO.File.Exists(storage + photo.Path))
+                if (System.IO.File.Exists(storage + photo.Path))
                 {
                     System.IO.File.Delete(storage + photo.Path);
                 }
             }
-            
+
 
             var result = db.DeleteAlbum(model.AlbumId, userId);
 
@@ -196,14 +206,26 @@ namespace mohome_api.Controllers
 
             int userId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
             int? albumId = file.AlbumId;
+
+            if (!db.CheckAlbumExists((int)albumId, userId))
+            {
+                return StatusCode(403, new ErrorDetails()
+                { errorId = ErrorList.UnauthorizedAction.Id, errorMessage = ErrorList.UnauthorizedAction.Description }.ToString());
+            }
+
             var extension = Path.GetExtension(photo.FileName).Replace(".", "");
 
+            if (!AllowedExtensions.Contains(extension))
+            {
+                return BadRequest(new ErrorDetails()
+                { errorId = ErrorList.InputDataError.Id, errorMessage = ErrorList.InputDataError.Description }.ToString());
+            };
             var newFilename = $"{DateTime.Now.ToString().GetHashCode().ToString("x")}.{extension}";
             var additionalPath = $"/{userId}/{newFilename}";
 
             db.AddPhoto(newFilename, userId, albumId, additionalPath);
 
-                
+
             string path = storage + additionalPath;
 
             if (!Directory.Exists(Path.GetDirectoryName(path)))
@@ -214,11 +236,11 @@ namespace mohome_api.Controllers
                 await photo.CopyToAsync(fileStream);
             }
 
-            return Ok(new { response = new { imagePath = PHOTO_STORAGE_PATH + $"/{newFilename}" } });
+            return Ok(new { response = new { fileName = newFilename } });
         }
 
         /// <summary>
-        /// Returns photo by photo name
+        /// Returns base64 photo by photo name
         /// </summary>
         ///  <response code="500">Uploading error</response>  
         ///  <response code="500">Internal server error</response> 
@@ -228,6 +250,7 @@ namespace mohome_api.Controllers
         [ProducesResponseType(500)]
         [ProducesResponseType(404)]
         [ProducesResponseType(401)]
+        [ResponseCache(Duration = 500)]
         [Route("{photoName}")]
         [HttpGet, Authorize]
         public IActionResult GetPhoto(string photoName)
@@ -242,8 +265,7 @@ namespace mohome_api.Controllers
             {
                 return StatusCode(404, new ErrorDetails() { errorId = ErrorList.FileNotFound.Id, errorMessage = ErrorList.FileNotFound.Description });
             }
-
-            return File(System.IO.File.OpenRead(storage + path), $"image/{extension}");
+            return Ok(new { response = new { image = Convert.ToBase64String(System.IO.File.ReadAllBytes(storage + path)), imageType = $"image/{extension}" } });
         }
 
 
@@ -265,17 +287,17 @@ namespace mohome_api.Controllers
 
             IEnumerable<Photo> photos;
 
-            if(albumId is null)
+            if (albumId is null)
             {
                 photos = db.GetAllPhotos(userId);
             }
             else
             {
-                photos = db.GetPhotosByAlbum(userId, (int) albumId);
+                photos = db.GetPhotosByAlbum(userId, (int)albumId);
             }
 
             List<PhotosViewModel> list = new List<PhotosViewModel>();
-            foreach(var photo in photos)
+            foreach (var photo in photos)
             {
                 var model = new PhotosViewModel
                 {
@@ -297,6 +319,7 @@ namespace mohome_api.Controllers
         ///  <response code="400">Your input data is incorrect</response>  
         ///  <response code="500">Internal server error</response> 
         [UserActionFilter]
+        [ModelActionFilter]
         [HttpPatch, Authorize]
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
@@ -306,8 +329,8 @@ namespace mohome_api.Controllers
             int userId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
 
             var result = db.ChangePhotoDescription(model.photoName, model.Description, userId);
-            
-            if(result > 0) return Ok(new { response = 1});
+
+            if (result > 0) return Ok(new { response = 1 });
 
             throw new Exception("Unknown error");
         }

@@ -48,7 +48,7 @@ namespace mohome_api
                        .AllowCredentials();
             }));
 
- 
+
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                .AddJwtBearer(options =>
                {
@@ -68,11 +68,11 @@ namespace mohome_api
 
 
             services.AddAutoMapper();
-            services.AddMvc(options => 
+            services.AddMvc(options =>
             {
                 options.Filters.Add(new ModelActionFilter());
                 options.Filters.Add(new MohomeAuthorizeFilter(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build()));
-                
+
             }).SetCompatibilityVersion(CompatibilityVersion.Version_2_1); ;
             services.AddMvc().AddControllersAsServices();
             services.AddSwaggerGen(c =>
@@ -91,7 +91,7 @@ namespace mohome_api
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             app.UseCors("CORSPolicy");
-        
+
 
             if (env.IsDevelopment())
             {

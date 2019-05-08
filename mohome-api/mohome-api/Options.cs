@@ -12,7 +12,7 @@ namespace mohome_api
         public static string PHOTO_STORAGE_PATH = LOCAL_STORAGE_URL + PHOTO_PATH;
         public static string LOCAL_STORAGE = "D:/storage";
 
-        private readonly static List<string> AllowedExtensions = new List<string>() { "png", "jpg", "jpeg", "gif" };
+        public readonly static List<string> AllowedExtensions = new List<string>() { "png", "jpg", "jpeg", "gif" };
 
         public enum claimTypes { Email, Name, Role, Id }
         public readonly static int uploadPhotoLimitMB = 10;

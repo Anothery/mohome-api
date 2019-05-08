@@ -12,6 +12,7 @@ namespace mohome_api.ViewModels
         public DateTime Created { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public string CoverPhotoPath { get; set; }
+        public string CoverPhotoName { get; set; }
+        public int PhotoCount { get; set; }
     }
 }
