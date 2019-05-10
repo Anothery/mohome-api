@@ -15,7 +15,7 @@ using mohome_api.Filters;
 
 namespace mohome_api.Controllers
 {
-    [Route("Api/[controller]")]
+    [Route("api/v1/[controller]")]
     [ApiController]
     public class TokenController : ControllerBase
     {
@@ -33,8 +33,7 @@ namespace mohome_api.Controllers
         /// </summary>
         /// <response code="500">Internal server error</response>  
         [AllowAnonymous]
-        [ModelActionFilter]
-        [Route("Sign-in")]
+        [Route("sign-in")]
         [HttpPost]
         [ProducesResponseType(500)]
         public IActionResult SignIn([FromBody] LoginModel login)
@@ -66,7 +65,7 @@ namespace mohome_api.Controllers
         /// <response code="401">You are unauthorized</response>  
         /// <response code="500">Internal server error</response>  
         [AllowAnonymous]
-        [Route("Sign-up")]
+        [Route("sign-up")]
         [HttpPost]
         [ModelActionFilter]
         [ProducesResponseType(400)]
@@ -97,7 +96,7 @@ namespace mohome_api.Controllers
         /// <response code="400">Your input data is incorrect</response>  
         /// <response code="500">Internal server error</response>  
         [AllowAnonymous]
-        [Route("Refresh-token")]
+        [Route("refresh")]
         [HttpPost]
         [ModelActionFilter]
         [ProducesResponseType(400)]

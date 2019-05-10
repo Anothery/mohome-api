@@ -4,13 +4,21 @@
         <name>mohome-api</name>
     </assembly>
     <members>
-        <member name="M:mohome_api.Controllers.PhotoController.GetAlbums">
+        <member name="M:mohome_api.Controllers.PhotoAlbumsController.GetAlbum(System.Int32)">
+            <summary>
+            Returns an album 
+            </summary>
+            <response code="500">Internal server error</response> 
+            <response code="404">Album not found</response>
+            <response code="401">UserId is undefined</response>
+        </member>
+        <member name="M:mohome_api.Controllers.PhotoAlbumsController.GetAlbums">
             <summary>
             Returns album list for current user
             </summary>
             <response code="500">Internal server error</response> 
         </member>
-        <member name="M:mohome_api.Controllers.PhotoController.CreateAlbum(mohome_api.ViewModels.CreateAlbumModel)">
+        <member name="M:mohome_api.Controllers.PhotoAlbumsController.CreateAlbum(mohome_api.ViewModels.CreateAlbumModel)">
             <summary>
             Creates a new album
             </summary>
@@ -18,7 +26,7 @@
              <response code="400">Your input data is incorrect</response>  
              <response code="500">Internal server error</response> 
         </member>
-        <member name="M:mohome_api.Controllers.PhotoController.ChangeAlbum(mohome_api.ViewModels.ChangeAlbumModel)">
+        <member name="M:mohome_api.Controllers.PhotoAlbumsController.ChangeAlbum(System.Int32,mohome_api.ViewModels.ChangeAlbumModel)">
             <summary>
             Updates an album
             </summary>
@@ -26,7 +34,7 @@
              <response code="400">Your input data is incorrect</response>  
              <response code="500">Internal server error</response> 
         </member>
-        <member name="M:mohome_api.Controllers.PhotoController.DeleteAlbum(mohome_api.ViewModels.DeleteAlbumModel)">
+        <member name="M:mohome_api.Controllers.PhotoAlbumsController.DeleteAlbum(System.Int32)">
             <summary>
             Deletes a specific album
             </summary>
@@ -35,7 +43,7 @@
              <response code="401">Your user id is undefined</response>  
              <response code="500">Internal server error</response> 
         </member>
-        <member name="M:mohome_api.Controllers.PhotoController.UploadPhoto(mohome_api.ViewModels.PhotoFile)">
+        <member name="M:mohome_api.Controllers.PhotosController.UploadPhoto(mohome_api.ViewModels.PhotoFile)">
             <summary>
             Uploads a photo
             </summary>
@@ -44,7 +52,7 @@
              <response code="401">Your user id is undefined</response>  
              <response code="500">Internal server error</response> 
         </member>
-        <member name="M:mohome_api.Controllers.PhotoController.GetPhoto(System.String)">
+        <member name="M:mohome_api.Controllers.PhotosController.GetPhoto(System.String)">
             <summary>
             Returns base64 photo by photo name
             </summary>
@@ -53,20 +61,28 @@
              <response code="404">File not found</response>  
              <response code="401">Your user id is undefined</response>  
         </member>
-        <member name="M:mohome_api.Controllers.PhotoController.GetPhotos(System.Nullable{System.Int32})">
+        <member name="M:mohome_api.Controllers.PhotosController.DeletePhoto(System.String)">
+            <summary>
+            Returns base64 photo by photo name
+            </summary>
+             <response code="500">Uploading error</response>  
+             <response code="500">Internal server error</response> 
+             <response code="403">Unauthorized action</response>  
+             <response code="401">Your user id is undefined</response>  
+        </member>
+        <member name="M:mohome_api.Controllers.PhotosController.GetPhotos(System.Nullable{System.Int32})">
             <summary>
             Returns photos by albumId. If albumId is null, returns all photos
             </summary>
              <response code="500">Internal server error</response>  
              <response code="401">Your user id is undefined</response>  
         </member>
-        <member name="M:mohome_api.Controllers.PhotoController.ChangePhotoDescription(mohome_api.ViewModels.Photo.ChangePhotoDescription)">
+        <member name="M:mohome_api.Controllers.PhotosController.ChangePhotoDescription(System.String,mohome_api.ViewModels.Photo.ChangePhotoDescription)">
             <summary>
-            Updates a photo description
+            Updates photo description
             </summary>
+             <response code="500">Internal server error</response>  
              <response code="401">Your user id is undefined</response>  
-             <response code="400">Your input data is incorrect</response>  
-             <response code="500">Internal server error</response> 
         </member>
         <member name="M:mohome_api.Controllers.TokenController.SignIn(mohome_api.ViewModels.LoginModel)">
             <summary>

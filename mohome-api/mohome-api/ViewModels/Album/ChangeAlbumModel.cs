@@ -9,8 +9,6 @@ namespace mohome_api.ViewModels
     public class ChangeAlbumModel
     {
         [Required]
-        public int albumId { get; set; }
-        [Required]
         public string AlbumName { get; set; }
 
         [StringLength(100)]

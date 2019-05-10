@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Models;
 
@@ -93,12 +94,19 @@ namespace DBRepository
 
         public int DeleteAlbum(int albumId, int userId)
         {
+            int result = -1;
             var album = db.PhotoAlbum.Where(a => a.AlbumId == albumId && a.UserId == userId).FirstOrDefault();
             //User tries to remove another album
             if (album is null) return -1;
-
-            db.PhotoAlbum.Remove(album);
-            var result = db.SaveChanges();
+            
+            using (TransactionScope tsTransScope = new TransactionScope())
+            {
+                db.Photo.RemoveRange(db.Photo.Where(r => r.AlbumId == albumId));
+                db.PhotoAlbum.Remove(album);
+                result = db.SaveChanges();
+                tsTransScope.Complete();
+            }
+          
             return result;
         }
 
@@ -113,11 +121,39 @@ namespace DBRepository
             return lastPhoto.Name;
         }
 
+        public int DeletePhoto(string photoName, int userId)
+        {
+            var photo = db.Photo.SingleOrDefault(r => r.Name == photoName && r.UserId == userId);
+
+            if (photo is null) { return -1; }
+
+            int result; 
+
+            using (TransactionScope tsTransScope = new TransactionScope())
+            {
+                var albums = db.PhotoAlbum.Where(r => r.CoverPhotoId == photo.PhotoId);
+                foreach(var album in albums)
+                {
+                    album.CoverPhotoId = null;
+                }
+                db.Photo.Remove(photo);
+                result = db.SaveChanges();
+                tsTransScope.Complete();
+            }
+
+            return result;
+        }
 
         public IEnumerable<PhotoAlbum> GetPhotoAlbums(int userId)
         {
             return db.PhotoAlbum.Include(r => r.Photos).Where(pa => pa.UserId == userId);
         }
+
+        public PhotoAlbum GetPhotoAlbum(int albumId, int userId)
+        {
+            return db.PhotoAlbum.Include(r => r.Photos).FirstOrDefault(pa => pa.UserId == userId && pa.AlbumId == albumId);
+        }
+
 
         public async void AddRefreshToken(string token, int userId, DateTime creationDate, DateTime expirationDate)
         {
@@ -160,7 +196,7 @@ namespace DBRepository
             var album = db.PhotoAlbum.FirstOrDefault(r => r.AlbumId == albumId && r.UserId == userId);
             return album != null;
         }
-        public async void AddPhoto(string name, int userId, int? albumid, string path)
+        public void AddPhoto(string name, int userId, int? albumid, string path)
         {
             var model = new Photo
             {
@@ -171,18 +207,17 @@ namespace DBRepository
                 Name = name
             };
 
-            await db.Photo.AddAsync(model);
-            await db.SaveChangesAsync();
+            db.Photo.Add(model);
+            db.SaveChanges();
         }
 
-        public string GetPhotoPath(int userId, string photoName)
+        public Photo GetPhoto(int userId, string photoName)
         {
             var photo = db.Photo.Where(r => r.UserId == userId && r.Name == photoName).FirstOrDefault();
-            if (photo is null) return null;
-            return photo.Path;
+            return photo;
         }
 
-        public string GetPhotoName(int userId, int photoId)
+        public string GetPhotoName(int userId, int? photoId)
         {
             var photo = db.Photo.Where(r => r.UserId == userId && r.PhotoId == photoId).FirstOrDefault();
             if (photo is null) return null;

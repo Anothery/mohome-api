@@ -61,8 +61,7 @@ namespace DBRepository
                 entity.HasOne(e => e.CoverPhoto);
                 entity.HasMany(e => e.Photos)
                       .WithOne(e => e.Album)
-                      .HasForeignKey(e => e.AlbumId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                      .HasForeignKey(e => e.AlbumId);
             });
             modelBuilder.Entity<RefreshToken>(entity =>
             {

@@ -11,6 +11,7 @@ namespace mohome_api.ViewModels
     {
         [Required]
         public IFormFile Photo { get; set; }
+
         public int AlbumId { get; set; }
     }
 }
