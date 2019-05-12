@@ -13,6 +13,9 @@ using System.IO;
 using mohome_api.Filters;
 using Models;
 using mohome_api.ViewModels.Photo;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 
 namespace mohome_api.Controllers
 {
@@ -74,13 +77,19 @@ namespace mohome_api.Controllers
                 return BadRequest(new ErrorDetails()
                 { errorId = ErrorList.InputDataError.Id, errorMessage = ErrorList.InputDataError.Description }.ToString());
             };
-            var newFilename = $"{Guid.NewGuid().ToString().Replace("-", "")}.{extension}"; //$"{DateTime.Now.ToString().GetHashCode().ToString("x")}.{extension}";
-            var additionalPath = $"/{userId}/{newFilename}";
 
-            db.AddPhoto(newFilename, userId, albumId, additionalPath);
+            var imageName = Guid.NewGuid().ToString().Replace("-", "");
+            var newFilename = $"{imageName}.{extension}";
+            var thumbName = $"{imageName}_thumb.{extension}";
 
+            var additionalPath = $"/{userId}";
+            var newImagePath = $"{additionalPath}/{newFilename}";
+            var newThumbPath = $"{additionalPath}/{thumbName}";
 
-            string path = storage + additionalPath;
+            db.AddPhoto(newFilename, userId, albumId, newImagePath, newThumbPath, thumbName);
+
+            var path = storage + newImagePath;
+            var thumbPath = storage + newThumbPath;
 
             if (!Directory.Exists(Path.GetDirectoryName(path)))
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
@@ -90,11 +99,20 @@ namespace mohome_api.Controllers
                 await photo.CopyToAsync(fileStream);
             }
 
+            var resizedThumb = ResizeImage(Image.FromStream(photo.OpenReadStream()));
+
+            if (!Directory.Exists(Path.GetDirectoryName(thumbPath)))
+                Directory.CreateDirectory(Path.GetDirectoryName(thumbPath));
+
+
+            resizedThumb.Save(thumbPath);
+
+
             return Ok(new { response = new { fileName = newFilename } });
         }
 
         /// <summary>
-        /// Returns base64 photo by photo name
+        /// Returns base64 photo by photo name. If thumb=true, returns base64 thumbnail
         /// </summary>
         ///  <response code="500">Uploading error</response>  
         ///  <response code="500">Internal server error</response> 
@@ -104,12 +122,12 @@ namespace mohome_api.Controllers
         [ProducesResponseType(500)]
         [ProducesResponseType(404)]
         [ProducesResponseType(401)]
-        [ResponseCache(Duration = 10)]
+
         [Route("{photoName}")]
         [HttpGet, Authorize]
-        public IActionResult GetPhoto(string photoName)
+        public IActionResult GetPhoto(string photoName, [FromQuery(Name = "thumb")] bool? thumb)
         {
-            int userId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
+            var userId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
 
             var extension = Path.GetExtension(photoName).Replace(".", ""); ;
 
@@ -119,12 +137,21 @@ namespace mohome_api.Controllers
             {
                 return StatusCode(404, new ErrorDetails() { errorId = ErrorList.FileNotFound.Id, errorMessage = ErrorList.FileNotFound.Description });
             }
-            return Ok(new { response = new { image = Convert.ToBase64String(System.IO.File.ReadAllBytes(storage + photo.Path)),
-                imageType = $"image/{extension}",
-                description = photo.Caption,
-                created = photo.Created,
-                albumId = photo.AlbumId
-                } });
+            string imgPath = storage + photo.Path;
+
+            if (thumb != null) { imgPath = storage + ((bool)thumb ? photo.ThumbPath : photo.Path); }
+
+            return Ok(new
+            {
+                response = new
+                {
+                    image = Convert.ToBase64String(System.IO.File.ReadAllBytes(imgPath)),
+                    imageType = $"image/{extension}",
+                    description = photo.Caption,
+                    created = photo.Created,
+                    albumId = photo.AlbumId
+                }
+            });
         }
 
 
@@ -148,7 +175,7 @@ namespace mohome_api.Controllers
 
             var extension = Path.GetExtension(photoName).Replace(".", ""); ;
 
-            var result  = db.DeletePhoto(photoName, userId);
+            var result = db.DeletePhoto(photoName, userId);
 
             switch (result)
             {
@@ -243,6 +270,27 @@ namespace mohome_api.Controllers
             if (result == 0) return Ok(new { response = 0 });
             throw new Exception("Unknown error");
         }
+
+        private Bitmap ResizeImage(Image image)
+        {
+            int width = 250, height = (int) (image.Height / ((double) image.Width / width));
+            using (image)
+            {
+                Bitmap cpy = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+                using (Graphics gr = Graphics.FromImage(cpy))
+                {
+                    gr.Clear(Color.Transparent);
+                    gr.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    gr.DrawImage(image,
+                        new Rectangle(0, 0, width, height),
+                        new Rectangle(0, 0, image.Width, image.Height),
+                        GraphicsUnit.Pixel);
+                }
+                return cpy;
+            }
+
+        }
+
 
     }
 }

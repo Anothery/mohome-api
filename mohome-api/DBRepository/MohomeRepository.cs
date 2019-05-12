@@ -203,7 +203,7 @@ namespace DBRepository
             var album = db.PhotoAlbum.FirstOrDefault(r => r.AlbumId == albumId && r.UserId == userId);
             return album != null;
         }
-        public void AddPhoto(string name, int userId, int? albumid, string path)
+        public void AddPhoto(string name, int userId, int? albumid, string path, string thumbPath, string thumbName)
         {
             var model = new Photo
             {
@@ -211,7 +211,9 @@ namespace DBRepository
                 AlbumId = albumid == 0 ? null : albumid,
                 UserId = userId,
                 Path = path,
-                Name = name
+                Name = name,
+                ThumbName = thumbName,
+                ThumbPath = thumbPath
             };
 
             db.Photo.Add(model);

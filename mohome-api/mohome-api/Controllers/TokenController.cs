@@ -53,8 +53,8 @@ namespace mohome_api.Controllers
             }
             return StatusCode(401, new ErrorDetails()
             {
-                errorId = ErrorList.UndefinedUser.Id,
-                errorMessage = ErrorList.UndefinedUser.Description
+                errorId = ErrorList.Unauthorized.Id,
+                errorMessage = ErrorList.Unauthorized.Description
             });
         }
 

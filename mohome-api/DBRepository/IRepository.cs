@@ -23,7 +23,7 @@ namespace DBRepository
         IEnumerable<PhotoAlbum> GetPhotoAlbums(int userId);
         PhotoAlbum GetPhotoAlbum(int albumId, int userId);
         string GetLastAlbumPhotoName(int albumId, int userId);
-        void AddPhoto(string name, int userId, int? albumid, string path);
+        void AddPhoto(string name, int userId, int? albumid, string path, string thumbPath, string thumbName);
         Photo GetPhoto(int userId, string photoName);
         string GetPhotoName(int userId, int? photoId);
         IEnumerable<Photo> GetPhotosByAlbum(int userId, int albumId);

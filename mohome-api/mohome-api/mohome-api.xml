@@ -52,9 +52,9 @@
              <response code="401">Your user id is undefined</response>  
              <response code="500">Internal server error</response> 
         </member>
-        <member name="M:mohome_api.Controllers.PhotosController.GetPhoto(System.String)">
+        <member name="M:mohome_api.Controllers.PhotosController.GetPhoto(System.String,System.Nullable{System.Boolean})">
             <summary>
-            Returns base64 photo by photo name
+            Returns base64 photo by photo name. If thumb=true, returns base64 thumbnail
             </summary>
              <response code="500">Uploading error</response>  
              <response code="500">Internal server error</response> 
