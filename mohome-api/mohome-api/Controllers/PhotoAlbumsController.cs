@@ -174,7 +174,7 @@ namespace mohome_api.Controllers
         /// Deletes a specific album
         /// </summary>
         ///  <response code="500">Failed to delete album. Try again</response>  
-        ///  <response code="400">Your input data is incorrect</response>  
+        ///  <response code="403">Unauthorized action</response>  
         ///  <response code="401">Your user id is undefined</response>  
         ///  <response code="500">Internal server error</response> 
 
@@ -183,14 +183,16 @@ namespace mohome_api.Controllers
         [ModelActionFilter]
         [UserActionFilter]
         [ProducesResponseType(500)]
-        [ProducesResponseType(400)]
+        [ProducesResponseType(403)]
         [ProducesResponseType(401)]
         [ProducesResponseType(520)]
         public IActionResult DeleteAlbum(int albumId)
         {
             int userId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
 
-            // Delete photos from storage             
+
+
+            /* Delete photos from storage             
             var photosToDelete = db.GetPhotosByAlbum(userId, albumId);
             foreach (var photo in photosToDelete)
             {
@@ -199,7 +201,7 @@ namespace mohome_api.Controllers
                     System.IO.File.Delete(storage + photo.Path);
                 }
             }
-
+            */
 
             var result = db.DeleteAlbum(albumId, userId);
 

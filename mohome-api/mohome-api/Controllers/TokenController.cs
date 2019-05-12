@@ -33,7 +33,7 @@ namespace mohome_api.Controllers
         /// </summary>
         /// <response code="500">Internal server error</response>  
         [AllowAnonymous]
-        [Route("sign-in")]
+        [Route("signin")]
         [HttpPost]
         [ProducesResponseType(500)]
         public IActionResult SignIn([FromBody] LoginModel login)
@@ -65,7 +65,7 @@ namespace mohome_api.Controllers
         /// <response code="401">You are unauthorized</response>  
         /// <response code="500">Internal server error</response>  
         [AllowAnonymous]
-        [Route("sign-up")]
+        [Route("signup")]
         [HttpPost]
         [ModelActionFilter]
         [ProducesResponseType(400)]

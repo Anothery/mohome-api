@@ -123,12 +123,13 @@ namespace mohome_api.Controllers
                 imageType = $"image/{extension}",
                 description = photo.Caption,
                 created = photo.Created,
+                albumId = photo.AlbumId
                 } });
         }
 
 
         /// <summary>
-        /// Returns base64 photo by photo name
+        /// Deletes a photo by photo name
         /// </summary>
         ///  <response code="500">Uploading error</response>  
         ///  <response code="500">Internal server error</response> 
@@ -239,7 +240,7 @@ namespace mohome_api.Controllers
             var result = db.ChangePhotoDescription(photoName, model.Description, userId);
 
             if (result > 0) return Ok(new { response = 1 });
-
+            if (result == 0) return Ok(new { response = 0 });
             throw new Exception("Unknown error");
         }
 

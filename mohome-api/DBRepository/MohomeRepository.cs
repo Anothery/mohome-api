@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Models;
@@ -98,9 +99,15 @@ namespace DBRepository
             var album = db.PhotoAlbum.Where(a => a.AlbumId == albumId && a.UserId == userId).FirstOrDefault();
             //User tries to remove another album
             if (album is null) return -1;
-            
+            if (album.CoverPhotoId != null)
+            {
+                album.CoverPhotoId = null;
+                db.SaveChanges();
+            }
+
             using (TransactionScope tsTransScope = new TransactionScope())
             {
+               
                 db.Photo.RemoveRange(db.Photo.Where(r => r.AlbumId == albumId));
                 db.PhotoAlbum.Remove(album);
                 result = db.SaveChanges();
