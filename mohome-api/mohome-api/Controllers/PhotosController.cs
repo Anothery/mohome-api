@@ -23,10 +23,10 @@ namespace mohome_api.Controllers
     [ApiController]
     public class PhotosController : ControllerBase
     {
-        private IRepository db;
+        private IPhotoRepository db;
         private string storage = LOCAL_STORAGE + PHOTO_PATH;
 
-        public PhotosController(IRepository db)
+        public PhotosController(IPhotoRepository db)
         {
             this.db = db;
         }
@@ -194,6 +194,7 @@ namespace mohome_api.Controllers
 
         /// <summary>
         /// Returns photos by albumId. If albumId is null, returns all photos
+        /// If offset is null, returns all photos, otherwise fist 20
         /// </summary>
         ///  <response code="500">Internal server error</response>  
         ///  <response code="401">Your user id is undefined</response>  
@@ -203,7 +204,7 @@ namespace mohome_api.Controllers
         [ProducesResponseType(404)]
         [ProducesResponseType(401)]
         [UserActionFilter]
-        public IActionResult GetPhotos([FromQuery(Name = "albumId")] int? albumId)
+        public IActionResult GetPhotos([FromQuery(Name = "albumId")] int? albumId, [FromQuery(Name = "offset")] int? offset)
         {
             int userId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
 
@@ -211,7 +212,7 @@ namespace mohome_api.Controllers
 
             if (albumId is null)
             {
-                photos = db.GetAllPhotos(userId);
+                photos = db.GetAllPhotos(userId, offset);
                 List<PhotosViewModel> list = new List<PhotosViewModel>();
                 foreach (var photo in photos)
                 {
@@ -229,7 +230,7 @@ namespace mohome_api.Controllers
             }
             else
             {
-                photos = db.GetPhotosByAlbum(userId, (int)albumId);
+                photos = db.GetPhotosByAlbum(userId, (int)albumId, offset);
                 List<PhotosWithAlbumModel> list = new List<PhotosWithAlbumModel>();
                 foreach (var photo in photos)
                 {

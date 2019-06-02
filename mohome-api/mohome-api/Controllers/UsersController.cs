@@ -16,9 +16,9 @@ namespace mohome_api.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        IRepository db;
+        IIdentityRepository db;
 
-        public UsersController(IRepository rep)
+        public UsersController(IIdentityRepository rep)
         {
             this.db = rep;
         }

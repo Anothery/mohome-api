@@ -18,10 +18,10 @@ namespace mohome_api.Controllers
     [ApiController]
     public class PhotoAlbumsController : ControllerBase    
     {
-        private IRepository db;
+        private IPhotoRepository db;
         private string storage = LOCAL_STORAGE + PHOTO_PATH;
 
-        public PhotoAlbumsController(IRepository db)
+        public PhotoAlbumsController(IPhotoRepository db)
         {
             this.db = db;
         }

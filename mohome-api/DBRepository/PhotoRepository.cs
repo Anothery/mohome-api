@@ -1,65 +1,20 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Text;
 using System.Transactions;
-using Microsoft.EntityFrameworkCore;
-using Models;
-
 
 namespace DBRepository
 {
-    // TODO: Divide repositories by section
-    public class MohomeRepository : IRepository
+    public class PhotoRepository : IPhotoRepository
     {
         private MohomeContext db;
 
-        public MohomeRepository(MohomeContext db)
+        public PhotoRepository(MohomeContext db)
         {
             this.db = db;
-        }
-
-        public IEnumerable<Profile> GetProfiles()
-        {
-            return db.Profile;
-        }
-
-        public Profile GetProfile(int userId)
-        {
-            return db.Profile.Include(r => r.Role).Where(r => r.UserId == userId).FirstOrDefault();
-        }
-
-        public Profile GetProfile(string email)
-        {
-            return db.Profile.Include(r => r.Role).Where(r => r.Email == email).FirstOrDefault();
-        }
-
-        public Profile GetProfile(string email, string password)
-        {
-            return db.Profile.Include(r => r.Role).Where(r => r.Email == email && r.Password == password).FirstOrDefault();
-        }
-
-
-        public bool CheckProfileExists(string email)
-        {
-            return !(db.Profile.FirstOrDefault(r => r.Email == email) is null);
-        }
-
-        public bool AddNewUser(string email, string password, string name)
-        {
-            var newUser = new Profile()
-            {
-                Email = email,
-                Name = name,
-                Password = password
-            };
-
-            db.Profile.Add(newUser);
-
-            var result = db.SaveChanges();
-
-            if (result > 0) return true;
-            return false;
         }
 
         public int CreateAlbum(string name, string description, int userId)
@@ -107,13 +62,13 @@ namespace DBRepository
 
             using (TransactionScope tsTransScope = new TransactionScope())
             {
-               
+
                 db.Photo.RemoveRange(db.Photo.Where(r => r.AlbumId == albumId));
                 db.PhotoAlbum.Remove(album);
                 result = db.SaveChanges();
                 tsTransScope.Complete();
             }
-          
+
             return result;
         }
 
@@ -134,12 +89,12 @@ namespace DBRepository
 
             if (photo is null) { return -1; }
 
-            int result; 
+            int result;
 
             using (TransactionScope tsTransScope = new TransactionScope())
             {
                 var albums = db.PhotoAlbum.Where(r => r.CoverPhotoId == photo.PhotoId);
-                foreach(var album in albums)
+                foreach (var album in albums)
                 {
                     album.CoverPhotoId = null;
                 }
@@ -162,41 +117,7 @@ namespace DBRepository
         }
 
 
-        public async void AddRefreshToken(string token, int userId, DateTime creationDate, DateTime expirationDate)
-        {
-            var model = new RefreshToken
-            {
-                UserId = userId,
-                Token = token,
-                CreationDate = creationDate,
-                ExpirationDate = expirationDate
-            };
 
-            await db.RefreshToken.AddAsync(model);
-            await db.SaveChangesAsync();
-        }
-
-        public bool CheckRefreshToken(string token, int userId)
-        {
-            var dbToken = db.RefreshToken.Where(t => t.Token == token && t.UserId == userId).FirstOrDefault();
-            if (dbToken is null) { return false; }
-            int checkExpiration = DateTime.Compare(DateTime.Now, dbToken.ExpirationDate);
-            if (checkExpiration > 0)
-            {
-                db.RefreshToken.Remove(dbToken);
-                db.SaveChanges();
-                return false;
-            }
-            //if valid
-            return true;
-        }
-
-        public void DeleteRefreshToken(string token, int userId)
-        {
-            var dbToken = db.RefreshToken.Where(t => t.Token == token && t.UserId == userId).FirstOrDefault();
-            db.RefreshToken.Remove(dbToken);
-            db.SaveChanges();
-        }
 
         public bool CheckAlbumExists(int albumId, int userId)
         {
@@ -235,16 +156,30 @@ namespace DBRepository
 
 
 
-        public IEnumerable<Photo> GetPhotosByAlbum(int userId, int albumId)
+        public IEnumerable<Photo> GetPhotosByAlbum(int userId, int albumId, int? offset)
         {
-            var photo = db.Photo.Where(r => r.UserId == userId && r.AlbumId == albumId).OrderBy(r => r.Created);
-            return photo;
+            if (offset is null)
+            {
+                return db.Photo.Where(r => r.UserId == userId && r.AlbumId == albumId).OrderBy(r => r.Created);
+            }
+            else
+            {
+                var take = 20;
+                return db.Photo.Where(r => r.UserId == userId && r.AlbumId == albumId).OrderBy(r => r.Created).Skip((int)offset).Take(take);
+            }
         }
 
-        public IEnumerable<Photo> GetAllPhotos(int userId)
+        public IEnumerable<Photo> GetAllPhotos(int userId, int? offset)
         {
-            var photo = db.Photo.Where(r => r.UserId == userId).OrderBy(r => r.Created);
-            return photo;
+            if (offset is null)
+            {
+                return db.Photo.Where(r => r.UserId == userId).OrderBy(r => r.Created);
+            }
+            else
+            {
+                var take = 20;
+                return db.Photo.Where(r => r.UserId == userId).OrderBy(r => r.Created).Skip((int)offset).Take(take);
+            }
         }
 
         public int ChangePhotoDescription(string photoName, string description, int userId)

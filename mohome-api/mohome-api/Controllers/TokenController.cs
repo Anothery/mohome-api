@@ -19,10 +19,10 @@ namespace mohome_api.Controllers
     [ApiController]
     public class TokenController : ControllerBase
     {
-        private IRepository db;
+        private IIdentityRepository db;
         private IConfiguration _config;
 
-        public TokenController(IConfiguration config, IRepository rep)
+        public TokenController(IConfiguration config, IIdentityRepository rep)
         {
             this.db = rep;
             _config = config;

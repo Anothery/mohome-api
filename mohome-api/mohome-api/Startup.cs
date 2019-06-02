@@ -88,7 +88,8 @@ namespace mohome_api
             });
            
 
-            services.AddTransient<IRepository, MohomeRepository>();
+            services.AddTransient<IIdentityRepository, IdentityRepository>();
+            services.AddTransient<IPhotoRepository, PhotoRepository>();
             services.AddTransient<MohomeContext>();
         }
 

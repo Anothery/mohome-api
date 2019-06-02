@@ -70,9 +70,10 @@
              <response code="403">Unauthorized action</response>  
              <response code="401">Your user id is undefined</response>  
         </member>
-        <member name="M:mohome_api.Controllers.PhotosController.GetPhotos(System.Nullable{System.Int32})">
+        <member name="M:mohome_api.Controllers.PhotosController.GetPhotos(System.Nullable{System.Int32},System.Nullable{System.Int32})">
             <summary>
             Returns photos by albumId. If albumId is null, returns all photos
+            If offset is null, returns all photos, otherwise fist 20
             </summary>
              <response code="500">Internal server error</response>  
              <response code="401">Your user id is undefined</response>  
