@@ -85,6 +85,20 @@
              <response code="500">Internal server error</response>  
              <response code="401">Your user id is undefined</response>  
         </member>
+        <member name="M:mohome_api.Controllers.PlaylistsController.CreatePlaylist(mohome_api.ViewModels.Playlist.CreatePlaylistModel)">
+            <summary>
+            Creates a new music playlist
+            </summary>
+             <response code="401">Your user id is undefined</response>  
+             <response code="400">Your input data is incorrect</response>  
+             <response code="500">Internal server error</response> 
+        </member>
+        <member name="M:mohome_api.Controllers.PlaylistsController.GetPlayLists">
+            <summary>
+            Returns music playlists for current user
+            </summary>
+            <response code="500">Internal server error</response> 
+        </member>
         <member name="M:mohome_api.Controllers.TokenController.SignIn(mohome_api.ViewModels.LoginModel)">
             <summary>
             Creates access and refresh tokens

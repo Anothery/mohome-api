@@ -10,6 +10,8 @@ namespace DBRepository
         public DbSet<Role> Role { get; set; }
         public DbSet<PhotoAlbum> PhotoAlbum { get; set; }
         public DbSet<Photo> Photo { get; set; }
+        public DbSet<Playlist> Playlist { get; set; }
+        public DbSet<Music> Music { get; set; }
         public DbSet<RefreshToken> RefreshToken { get; set; }
 
 
@@ -63,6 +65,7 @@ namespace DBRepository
                       .WithOne(e => e.Album)
                       .HasForeignKey(e => e.AlbumId);
             });
+
             modelBuilder.Entity<RefreshToken>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -77,6 +80,35 @@ namespace DBRepository
 
                 entity.Property(e => e.CreationDate).HasDefaultValue(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
+            });
+
+            modelBuilder.Entity<Music>(entity =>
+            {
+                entity.HasOne(e => e.Profile);
+                entity.HasOne(e => e.Playlist)
+                      .WithMany(e => e.Music)
+                      .HasForeignKey(e => e.PlaylistId);
+                entity.HasKey(e => e.MusicId);
+                entity.Property(e => e.UserId).IsRequired();
+                entity.Property(e => e.Created).HasDefaultValue(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                entity.Property(e => e.PlaylistId).HasDefaultValue(null);
+                entity.Property(e => e.MusicPath).IsRequired();
+                entity.Property(e => e.Name).IsRequired();
+                entity.Property(e => e.Author).IsRequired();
+            });
+
+            modelBuilder.Entity<Playlist>(entity =>
+            {
+                entity.HasKey(e => e.PlaylistId);
+                entity.Property(e => e.UserId).IsRequired();
+                entity.Property(e => e.Created).HasDefaultValue(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                entity.Property(e => e.CoverPhotoPath).HasDefaultValue(null);
+                entity.Property(e => e.Name).IsRequired();
+
+                entity.HasOne(e => e.Profile);
+                entity.HasMany(e => e.Music)
+                      .WithOne(e => e.Playlist)
+                      .HasForeignKey(e => e.PlaylistId);
             });
         }
 

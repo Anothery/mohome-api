@@ -90,6 +90,7 @@ namespace mohome_api
 
             services.AddTransient<IIdentityRepository, IdentityRepository>();
             services.AddTransient<IPhotoRepository, PhotoRepository>();
+            services.AddTransient<IMusicRepository, MusicRepository>();
             services.AddTransient<MohomeContext>();
         }
 
@@ -105,6 +106,7 @@ namespace mohome_api
             }
             else
             {
+                app.ConfigureExceptionHandler();
                 app.UseHsts();
             }
 
@@ -117,7 +119,7 @@ namespace mohome_api
                 c.RoutePrefix = string.Empty;
             });
 
-            app.ConfigureExceptionHandler();
+           
 
             app.UseHttpsRedirection();
             app.UseMvc();

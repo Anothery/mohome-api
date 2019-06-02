@@ -9,6 +9,7 @@ namespace mohome_api
     {
         public static string LOCAL_STORAGE_URL = "http://213.141.130.153/api";
         public static string PHOTO_PATH = "/photo";
+        public static string MUSIC_PATH = "/music";
         public static string PHOTO_STORAGE_PATH = LOCAL_STORAGE_URL + PHOTO_PATH;
         public static string LOCAL_STORAGE = "C:/storage";
 
