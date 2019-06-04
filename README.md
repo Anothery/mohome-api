@@ -11,8 +11,8 @@ Coming soon
 
 ### Database schema
 Coming soon
-
-### TODO
+-
+### Long-range TODO's
 * Correct error handling (exception handler (?))
 * Api rate limiting
 * Implementing ability to delete files from storage
