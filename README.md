@@ -11,7 +11,7 @@ Coming soon
 
 ### Database schema
 Coming soon
--
+
 ### Long-range TODO's
 * Correct error handling (exception handler (?))
 * Api rate limiting
