@@ -2,11 +2,14 @@
 Restful api for Mohome project
 
 ### Used technologies:
-ASP.NET Core 2 Web Api
-EF Core
-MySQL
+* ASP.NET Core 2 Web Api
+* EF Core
+* MySQL
 
 ### Api documentation
+Coming soon
+
+### Database schema
 Coming soon
 
 ### TODO
