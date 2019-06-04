@@ -130,7 +130,7 @@ namespace mohome_api.Controllers
         {
             int userId = int.Parse(HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimTypes.Id.ToString()).Value);
 
-            var newAlbumId = db.CreateAlbum(model.AlbumName, model.Description, userId);
+            var newAlbumId = db.CreateAlbum(model.Name, model.Description, userId);
 
             if (newAlbumId <= 0)
             {

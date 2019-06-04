@@ -11,6 +11,7 @@ namespace mohome_api.ViewModels.Playlist
         public DateTime Created { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public string CoverPhotoURL { get; set; }
+        public string CoverPhoto { get; set; }
+        public int MusicCount { get; set; }
     }
 }

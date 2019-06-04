@@ -16,6 +16,7 @@ using mohome_api.ViewModels.Photo;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using mohome_api.Infrastructure;
 
 namespace mohome_api.Controllers
 {
@@ -24,11 +25,13 @@ namespace mohome_api.Controllers
     public class PhotosController : ControllerBase
     {
         private IPhotoRepository db;
+        private PhotoHelper helper;
         private string storage = LOCAL_STORAGE + PHOTO_PATH;
 
-        public PhotosController(IPhotoRepository db)
+        public PhotosController(IPhotoRepository db, PhotoHelper helper)
         {
             this.db = db;
+            this.helper = helper;
         }
 
 
@@ -99,14 +102,12 @@ namespace mohome_api.Controllers
                 await photo.CopyToAsync(fileStream);
             }
 
-            var resizedThumb = ResizeImage(Image.FromStream(photo.OpenReadStream()));
+            var resizedThumb = helper.ResizeImage(Image.FromStream(photo.OpenReadStream()));
 
             if (!Directory.Exists(Path.GetDirectoryName(thumbPath)))
                 Directory.CreateDirectory(Path.GetDirectoryName(thumbPath));
 
-
-            resizedThumb.Save(thumbPath);
-
+            helper.SaveImage(resizedThumb, thumbPath);
 
             return Ok(new { response = new { fileName = newFilename } });
         }
@@ -145,7 +146,7 @@ namespace mohome_api.Controllers
             {
                 response = new
                 {
-                    image = Convert.ToBase64String(System.IO.File.ReadAllBytes(imgPath)),
+                    image = helper.GetBase64Image(imgPath),
                     imageType = $"image/{extension}",
                     description = photo.Caption,
                     created = photo.Created,
@@ -271,27 +272,6 @@ namespace mohome_api.Controllers
             if (result == 0) return Ok(new { response = 0 });
             throw new Exception("Unknown error");
         }
-
-        private Bitmap ResizeImage(Image image)
-        {
-            int width = 250, height = (int) (image.Height / ((double) image.Width / width));
-            using (image)
-            {
-                Bitmap cpy = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-                using (Graphics gr = Graphics.FromImage(cpy))
-                {
-                    gr.Clear(Color.Transparent);
-                    gr.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                    gr.DrawImage(image,
-                        new Rectangle(0, 0, width, height),
-                        new Rectangle(0, 0, image.Width, image.Height),
-                        GraphicsUnit.Pixel);
-                }
-                return cpy;
-            }
-
-        }
-
 
     }
 }

@@ -9,7 +9,7 @@ namespace mohome_api.ViewModels
     public class CreateAlbumModel
     {
         [Required]
-        public string AlbumName { get; set; }
+        public string Name { get; set; }
         [StringLength(100)]
         public string Description { get; set; }
     }
